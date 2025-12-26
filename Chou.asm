@@ -398,6 +398,10 @@ incsrc "object_defines.asm"
     !arthur_state_transformed = $05
 }
 
+{ ;other
+    !raft_ride_speed = $48 ;default: $40
+}
+
 { ;music / sfx IDs
     !mus_stage_1_boss       = $09
     !mus_stage_2_boss       = $0A

@@ -3559,6 +3559,12 @@ _019A93: ;a8 x8
 ;-----
 
 .9B78:
+    ;to use alternate wave strengths in different screens. desyncs fg & bg waves though!
+    ;lda.w camera_x+2
+    ;sec : sbc #$0B
+    ;and #$07
+    ;clc : adc $15
+
     clc
     lda $08
     adc $15
@@ -8941,9 +8947,9 @@ _01C679:
 .C7F6: ;raft sets 19EC to 2
     !A16
     clc
-    lda.w camera_x+0 : adc #$0040 : sta.w camera_x+0 : sta $1732
-    lda.w camera_x+2 : adc #$0000 : sta.w camera_x+2 : sta $1734
-    lda.w camera_x+1 : lsr : sta $1889
+    lda.w camera_x+0 : adc.w #!raft_ride_speed : sta.w camera_x+0 : sta $1732
+    lda.w camera_x+2 : adc #$0000              : sta.w camera_x+2 : sta $1734
+    lda.w camera_x+1 : lsr                     : sta $1889
     clc
     lda.w camera_x+1
     adc #$0008

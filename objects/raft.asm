@@ -311,18 +311,18 @@ _C90B:
     and #$02
     beq .C96B
 
-    lda #$40 : clc : adc.w camera_x            : sta.w !obj_arthur.pos_x+0
-    lda #$00 :       adc.w !obj_arthur.pos_x+1 : sta.w !obj_arthur.pos_x+1
-    lda #$00 :       adc.w !obj_arthur.pos_x+2 : sta.w !obj_arthur.pos_x+2
+    lda.w #!raft_ride_speed : clc : adc.w camera_x            : sta.w !obj_arthur.pos_x+0
+    lda #$00                      : adc.w !obj_arthur.pos_x+1 : sta.w !obj_arthur.pos_x+1
+    lda #$00                      : adc.w !obj_arthur.pos_x+2 : sta.w !obj_arthur.pos_x+2
     !A16
     lda.w !obj_arthur.pos_x+1
     cmp #$15B0
     !A8
     bcs .C96B
 
-    lda #$40 : clc : adc.w camera_x    : sta.b obj.pos_x+0
-    lda #$00       : adc.b obj.pos_x+1 : sta.b obj.pos_x+1
-    lda #$00       : adc.b obj.pos_x+2 : sta.b obj.pos_x+2
+    lda.w #!raft_ride_speed : clc : adc.w camera_x    : sta.b obj.pos_x+0
+    lda #$00                      : adc.b obj.pos_x+1 : sta.b obj.pos_x+1
+    lda #$00                      : adc.b obj.pos_x+2 : sta.b obj.pos_x+2
 .C96B:
     rts
 

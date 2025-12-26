@@ -259,7 +259,7 @@ endif
 
 .stage2:
 if !version == 0 || !version == 1
-    db $61
+    db $60
 elseif !version == 2
     db $5B
 endif
@@ -335,9 +335,9 @@ endif
     db !id_money_bag,     $88 : dw $0E88, $0210
     db !id_flying_killer, $80 : dw $0EC0, $02D0
     db !id_hannibal,      $80 : dw $0F20, $0280
-if !version == 0 || !version == 1
-    db !id_flying_killer, $80 : dw $0F20, $02C0
-endif
+;if !version == 0 || !version == 1
+;    db !id_flying_killer, $80 : dw $0F20, $02C0
+;endif
     db !id_money_bag,     $80 : dw $0F38, $0280
     db !id_flying_killer, $80 : dw $0F40, $02C0
     db !id_hannibal,      $80 : dw $0F80, $0260

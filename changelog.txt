@@ -4,8 +4,17 @@ General:
 	Pot system now works across stages instead of resetting on stage start
     Speed up princess dialogue (wip)
 
+Stage 2:
+	Speed up raft section: 200s -> 177s
+	Remove 1 Flying Killer (wip)
+
 Difficulty:
 	Change beginner loop 2 difficulty: expert -> normal
+
+Bug fixes:
+	Wolf & Mad dog: fix wait timer bug
+	Siren: fix waiting bug by adding a base wait timer (random between [80f, 64f, 48f, 32f])
+	Flower: fix activation range bug
 
 HP adjustments:
     Wolf:          [ 10,  10,  10,  10] -> [  6,   8,  10,  10]

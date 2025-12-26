@@ -1497,15 +1497,15 @@ arthur_range_check_data:
     dw $0060 ;20: pre-placed zombie coffin
     dw $0070
     dw $0040
-    dw $0020 ;skull flower activation range, unused due to bug (e,p)
+    dw $0020 ;skull flower activation range (e,p)
     dw $0030
     dw $0040
     dw $0040
     dw $0140
     dw $0080
-    dw $0060 ;skull flower activation range, unused due to bug (n)
-    dw $006E ;skull flower activation range, unused due to bug (b,n,e)
-    dw $0080 ;skull flower activation range, unused due to bug (e,p)
+    dw $0060 ;skull flower activation range (n)
+    dw $006E ;skull flower activation range (b,n,e)
+    dw $0080 ;skull flower activation range (e,p)
 
 .y:
     dw $0008 ;shell
@@ -1619,11 +1619,14 @@ boat: ;todo: rename? stage 2 data or something
     db $00, $08
 
 ;2-2:
+;i think this is meant to be different wave speeds at different areas. can we use it?!
 .AB70: ;indices into next values, only first value used
     db 0, 4, 0, 0, 4, 0, 0, 4
     db 0, 4, 0, 0, 4, 0, 0, 4
 
-.AB80: dl $FFFE67 : db $08 ;default wave speed
+; default speed dl $FFFE67 : db $08
+; slower  speed dl $FFFE7E : db $07
+.AB80: dl $FFFE7E : db $07 ;default wave speed
 .AB84: dl $FFFE67 : db $08 ;secondary wave speed (identical), unused
 }
 
@@ -4322,9 +4325,9 @@ gate2_data:
 mad_dog_data:
 
 .D57B: db $20, $20, $20, $20, $60, $60, $60, $60, $60, $60, $60, $60, $A0, $A0, $A0, $A0
-.D58B: db $0A, $00, $F8, $F6 ;bug: unused
+.D58B: db $0A, $00, $F8, $F6
 .D58F: db $20, $20, $20, $40, $40, $40, $40, $40, $40, $40, $60, $60, $60, $60, $60, $60
-.D59F: db $2A, $20, $18, $16 ;bug: unused
+.D59F: db $2A, $20, $18, $16
 .D5A3: db $08, $08, $08, $08, $08, $08, $08, $20, $10, $10, $10, $10, $10, $10, $10, $20
 .D5B3: db $26, $26, $26, $26, $26, $28, $28, $28, $28, $28, $28, $28, $2A, $2A, $2A, $2A
 .D5C3: dw $0006, $0010 ;$13
