@@ -62,7 +62,7 @@ endif
     db 0, 0, 0, 0
     db 0, 0, 0, 0
 if !version == 0 || !version == 1
-    db 10, 10, 10, 10 ;siren
+    db 8, 9, 10, 12 ;siren
 elseif !version == 2
     db 4, 6, 12, 10 ;has more hp in expert than professional!
 endif
@@ -81,14 +81,14 @@ endif
     db 2, 2, 2, 2 ;ghost
     db 0, 0, 0, 0
 if !version == 0 || !version == 1
-    db 10, 10, 10, 10 ;flower head
+    db 7, 8, 10, 10 ;flower head
 elseif !version == 2
     db 4, 6, 10, 10
 endif
     db 0, 0, 0, 0
     db 0, 0, 0, 0
 if !version == 0 || !version == 1
-    db 160, 170, 179, 184 ;cockatrice head
+    db 140, 160, 180, 190 ;cockatrice head
 elseif !version == 2
     db 120, 150, 179, 184
 endif
@@ -102,7 +102,7 @@ endif
     db 10, 10, 10, 10 ;mimic
     db 0, 0, 0, 0
 if !version == 0 || !version == 1
-    db 17, 17, 17, 17 ;hannibal
+    db 12, 14, 16, 17 ;hannibal
 elseif !version == 2
     db 4, 6, 12, 17
 endif
@@ -111,7 +111,7 @@ endif
     db 0, 0, 0, 0
     db 0, 0, 0, 0
 if !version == 0 || !version == 1
-    db 10, 10, 10, 10 ;wolf
+    db 6, 8, 10, 10 ;wolf
 elseif !version == 2
     db 4, 6, 10, 10
 endif
@@ -119,7 +119,7 @@ endif
     db 0, 0, 0, 0
     db 0, 0, 0, 0
 if !version == 0 || !version == 1
-    db 139, 149, 155, 160 ;storm cesaris
+    db 120, 140, 155, 160 ;storm cesaris
 elseif !version == 2
     db 110, 135, 155, 160
 endif
