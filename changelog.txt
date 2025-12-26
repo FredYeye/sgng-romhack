@@ -3,6 +3,10 @@ General:
 	Improved RNG system
 	Pot system now works across stages instead of resetting on stage start
     Speed up princess dialogue (wip)
+	Restore the shell peeking animation (and adjust waiting times to compensate)
+
+Stage 1:
+	Skull tower cooldown difficulty modifier: [30f, 15f, 0f, -8f] -> [35f, 25f, 10f, 0f]
 
 Stage 2:
 	Speed up raft section: 200s -> 177s
@@ -10,6 +14,7 @@ Stage 2:
 
 Difficulty:
 	Change beginner loop 2 difficulty: expert -> normal
+	Ghost forming timer: [126f, 106f, 96f, 76f] -> [136f, 116f, 96f, 76f]
 
 Bug fixes:
 	Wolf & Mad dog: fix wait timer bug

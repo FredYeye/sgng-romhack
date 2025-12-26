@@ -3450,7 +3450,7 @@ skulls_data:
 .cooldown2: db 16, 16, 32, 32, 32, 32, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48
 .cooldown2_difficulty:
 if !version == 0 || !version == 1
-    db 30, 15, 0, -8
+    db 35, 25, 10, 0
 elseif !version == 2
     db 40, 30, 10, 0
 endif
@@ -3719,7 +3719,7 @@ endif
 .wait_timer:
 ..forming:
 if !version == 0 || !version == 1
-    db 126, 106, 96, 76
+    db 136, 116, 96, 76
 elseif !version == 2
     db 136, 126, 96, 76
 endif
