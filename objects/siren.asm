@@ -112,8 +112,12 @@ create:
 
     ldy #$A6 : ldx #$21 : jsl set_sprite
     lda #!id_splash : jsl prepare_object
+    jsl get_rng_16
+    lda.w siren_data_cooldown,X
     ldx.w difficulty
-    lda.w siren_data_CD32,X : cop #$00 ;mistake: no base timer! it's using the difficulty modifier as a raw timer
+    clc
+    adc.w siren_data_CD32,X
+    cop #$00
 
 ;----- E529
 

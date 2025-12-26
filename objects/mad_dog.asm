@@ -34,7 +34,7 @@ create:
     ldy #$1C : ldx #$22 : jsl set_sprite
     jsl get_rng_16
     lda.w mad_dog_data_D57B,X
-    ldx $9636 ;bug: loads $FF. supposed to be difficulty...?
+    ldx.w difficulty
     clc
     adc.w mad_dog_data_D58B,X
     !A16
@@ -88,7 +88,7 @@ create:
 .DC1A:
     jsl get_rng_16
     lda.w mad_dog_data_D58F,X
-    ldx $9636 ;bug: loads $FF. supposed to be difficulty...?
+    ldx.w difficulty
     clc
     adc.w mad_dog_data_D59F,X
     cop #$00

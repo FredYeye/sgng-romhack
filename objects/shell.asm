@@ -25,11 +25,11 @@ create:
 ;----- D235
 
     jsl _01A593
-    bne .D25D
+    bne .peek
 
     jmp destroy_D305 ;remove shell if it didn't land on solid ground
 
-    ;unused code start
+.peek:
     dec $34
     bne .D233
 
@@ -42,16 +42,13 @@ create:
 
     jsl _01A593
     bne .D259
-    ;unused code end
 
 .D256:
     jmp destroy_D305
 
 .D259:
-    ;unused code start
     dec $32
     bne .D24E
-    ;unused code end
 
 .D25D:
     lda $2D
@@ -66,7 +63,7 @@ create:
     ldy #$1B
 .D26B:
     jsl set_speed_xyg
-    lda #$68 : sta $32
+    lda #$08 : sta $32
 .D273:
     brk #$00
 

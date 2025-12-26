@@ -2471,7 +2471,3 @@ endif
 	db $01 : dw $0500, $063C, $0082
 	dw $0000
 }
-
-{ ;FD70 - FFFF
-	fillbyte $00 : fill 656
-}

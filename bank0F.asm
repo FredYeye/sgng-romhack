@@ -49,11 +49,3 @@ incbin "graphics/magic_tornado.bin"
 incbin "graphics/magic_shield.bin"
 incbin "graphics/magic_lightning.bin"
 incbin "graphics/magic_nuclear.bin"
-
-{ ;FDC0 - FFFF
-if !version == 0
-    fillbyte $FF : fill 576
-elseif !version == 1 || !version == 2
-    incbin "fill_bytes/eng/bank0Fa.bin"
-endif
-}

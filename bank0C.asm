@@ -1840,7 +1840,3 @@ _0C8000: ;meta tiles
     dw $AAB8, $AAC0, $AAF0, $AAE8,  $AAB0, $AAA8, $AAF0, $AAE8 ;F140
     dw $AAC0, $AAB8, $AAF0, $AAE8
 }
-
-{ ;F158 - FFFF
-    fillbyte $00 : fill 3752
-}

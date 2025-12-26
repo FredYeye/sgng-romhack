@@ -2032,7 +2032,3 @@ _0D8000: ;tiles
     dw $5B33, $5B33, $5B4D, $5B4D,  $5B33, $5B48, $5B4C, $5B4B
     dw $5B47, $0000, $5B4A, $0000
 }
-
-{ ;FDC0 - FFFF
-    fillbyte $00 : fill 576
-}

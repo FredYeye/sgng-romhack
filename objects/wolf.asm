@@ -44,9 +44,9 @@ create:
     ldy #$1C : ldx #$22 : jsl set_sprite
     jsl get_rng_16
     lda.w wolf_data_idle_timer,X
-    ldx $9636 ;bug: loads $FF. supposed to be difficulty...?
+    ldx.w difficulty
     clc
-    adc.w wolf_data_idle_timer_modifier,X ;always adds $00 from $CE15 instead!
+    adc.w wolf_data_idle_timer_modifier,X
     !A16
     and #$00FF
     asl
@@ -107,9 +107,9 @@ create:
 .E370:
     jsl get_rng_16
     lda.w wolf_data_jump_cooldown,X
-    ldx $9636 ;bug: loads $FF. supposed to be difficulty...?
+    ldx.w difficulty
     clc
-    adc.w wolf_data_jump_cooldown_modifier,X ;always adds $01 from $CE29 instead!
+    adc.w wolf_data_jump_cooldown_modifier,X
     cop #$00
 
 ;----- E380

@@ -2911,9 +2911,7 @@ flower_part:
     lda.w #_00CEB6 : sta $13
     !A8
     stz $15
-    ldy #$B4    ;bug: should be ldx!
-    jsl _0196EF ;x will always be 8 for this call!
-    sta $2D     ;possible values: 2, 4, 6
+    ldx #$B4 : jsl _0196EF : sta $2D
 .F1E2:
     brk #$00
 

@@ -1533,14 +1533,3 @@ endif
     incsrc "objects/sun.asm"           ;FBFA - FC3F
     incsrc "objects/ending_object.asm" ;FC40 - FC87
 }
-
-if !version == 0
-{ ;FC88 - FFFF
-    incbin "fill_bytes/jp/bank03a.bin" ;unused duplicate code
-    fillbyte $FF : fill 793
-}
-elseif !version == 1
-    incbin "fill_bytes/eng/bank03a.bin":206..0
-elseif !version == 2
-    incbin "fill_bytes/eng/bank03a.bin"
-endif

@@ -1647,12 +1647,4 @@ endif
     arch 65816
 }
 
-{ ;FA39 - FFFF
-if !version == 0
-    fillbyte $FF : fill 1479
-elseif !version == 1 || !version == 2
-    incbin "fill_bytes/eng/bank07a.bin"
-endif
-}
-
 check bankcross full
