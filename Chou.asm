@@ -7,7 +7,7 @@
     ;0 = JP
     ;1 = US
     ;2 = EU
-    !version = 0
+    !version = 1
 }
 
 { ;asar functions
@@ -96,6 +96,10 @@
     !APUI01   = $2141 ;Main CPU to Sound CPU Communication Port 1
     !APUI02   = $2142 ;Main CPU to Sound CPU Communication Port 2
     !APUI03   = $2143 ;Main CPU to Sound CPU Communication Port 3
+
+    !WMDATA   = $2180
+    !WMADDL   = $2181
+    !WMADDH   = $2183
 
     !NMITIMEN = $4200 ;Interrupt Enable and Joypad Request
     !WRIO     = $4201 ;Joypad Programmable I/O Port (Open-Collector Output)

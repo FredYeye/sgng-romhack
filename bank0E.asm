@@ -1,4 +1,4 @@
-org $0E8000
+org $8E8000
 
 { ;8000 -
 arthur_sprites:

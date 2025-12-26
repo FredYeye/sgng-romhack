@@ -2,7 +2,7 @@
 ;https://github.com/loveemu/vgm-disasm/blob/master/snes/Capcom/Super%20Ghouls%20'N%20Ghosts.s
 ;https://wiki.superfamicom.org/capcom-music-format
 
-org $068000
+org $868000
 
     arch spc700 ;APU code/data
 

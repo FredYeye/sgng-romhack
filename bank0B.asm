@@ -1,4 +1,4 @@
-org $0B8000
+org $8B8000
 
 { ;8000 - EFFF
 screen_layouts2:

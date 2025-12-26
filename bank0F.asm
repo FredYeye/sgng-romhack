@@ -1,4 +1,4 @@
-org $0F8000
+org $8F8000
 
 incbin "graphics/arthur_upgraded_armor.bin"
 incbin "graphics/arthur_seal.bin"

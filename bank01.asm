@@ -1,4 +1,4 @@
-org $018000
+org $818000
 
 { ;8000 - 8020
 set_hp: ;a- x-
@@ -126,13 +126,45 @@ _0180A6: ;a8 x-
 { ;80B9 - 80C6
 _0180B9: ;a8 x-
     !X16
-    ldx #$1C93
--:
-    stz $031E,X
-    dex : bpl -
+
+    ;backup pot data
+    ldx.w pot_spawn_counter : stx $0000
+    ldx.w pot_weapon_req    : stx $0002
+    ldx.w pot_extend_req    : stx $0004
+    ldx.w weapon_item_count : stx $0006
+
+    ldx #$031E : ldy #$1C93 : jsr clear_ram
+
+    ;restore pot data after clearing ram
+    ldx $0000 : stx.w pot_spawn_counter
+    ldx $0002 : stx.w pot_weapon_req
+    ldx $0004 : stx.w pot_extend_req
+    ldx $0006 : stx.w weapon_item_count
 
     !AX8
     rtl
+}
+
+{
+clear_ram: ;a8 x16
+    ;https://snes.nesdev.org/wiki/DMA_examples
+
+    ;X: wram offset
+    ;Y: len
+
+    stz !WMADDH
+    stx !WMADDL
+    sty !DAS0L
+
+    ldx.w #!WMDATA<<8|0|8
+.zero_src:
+    stx !DMAP0
+
+    ldx #.zero_src+1 : stx !A1T0L
+    lda #$01 : sta !A1B0
+    lda #$01 : sta !MDMAEN
+
+    rts
 }
 
 { ;80C7 - 810D
@@ -514,13 +546,13 @@ _018366: ;a- x8
 { ;83D4 - 8421
 _0183D4: ;a8 x16
     phb
-    lda #$04 : pha : plb
+    lda #$84 : pha : plb
     bra .83E6
 
 .83DB: ;a8 x8
     tax
     phb
-    lda #$04 : pha : plb
+    lda #$84 : pha : plb
     !X16
     ldy.w text_tilemaps,X
 .83E6:
@@ -563,19 +595,24 @@ _0183D4: ;a8 x16
 
 { ;8422 - 8450
 call_rng: ;a8 x-
-    lda.w rng_state
-    pha
-    sta $0000
     lda.w rng_state+1
-    sta $0001
-    asl $0000
-    rol $0001
-    clc : lda $0000         : adc.w rng_state : sta.w rng_state
-          lda.w rng_state+1 : adc $0001       : sta.w rng_state+1
-    pla
+    eor.w rng_state+0
+    and #$02
     clc
-    adc.w rng_state+1
-    sta.w rng_state+1
+    beq .asd
+
+    sec
+.asd:
+    ror.w rng_state+1
+    ror.w rng_state+0
+    ror.w rng_state+2
+    clc
+    lda.w rng_state+1
+    adc #$D7
+    ror #2
+    eor.w rng_state+0
+    adc.w rng_state+2
+    sta.w rng_state+0
     rtl
 }
 
@@ -1746,7 +1783,7 @@ _018DC0: ;a8 x8
     lda.l _0493F2+41,X : sta $0327
 .8E0E: ;a8 x-
     phb
-    lda #$04 : pha : plb
+    lda #$84 : pha : plb
     lda #$00
     xba
     !X16
@@ -2029,59 +2066,6 @@ _018F80: ;a8 x8
     !A8
     inc $0323
     rts
-}
-
-{ ;9024 - 908A
-_019024: ;a8 x-
-    ;copy lots of data into ram. what is this for?
-
-    !X16
-    lda.w stage
-    bne .9049
-
-    ldx #$7FFF
--:
-    lda $048000,X : sta $7F0000,X
-    dex : bpl -
-
-    ldx #$1FFF
--:
-    lda $058000,X : sta $7F8000,X
-    dex : bpl -
-
-    bra .9065
-
-.9049:
-    ldx #$7FFF
--:
-    lda $118000,X : sta $7F0000,X
-    dex : bpl -
-
-    ldx #$1FFF
-.905A:
-    lda $149000,X : sta $7F8000,X
-    dex : bpl .905A
-
-.9065:
-    lda.w stage
-    bne .907A
-
-    ldx #$5FFF
-.906D:
-    lda $05A000,X : sta $7FA000,X
-    dex : bpl .906D
-
-    bra .9088
-
-.907A:
-    ldx #$5FFF
--:
-    lda $09A000,X : sta $7FA000,X
-    dex : bpl -
-
-.9088:
-    !X8
-    rtl
 }
 
 { ;908B - 909A
@@ -3060,7 +3044,7 @@ _0196EF: ;a8 x8
 if !version == 2
 { ;9735 - 975F
 _019735_eu:
-    lda #$01 : pha : plb
+    lda #$81 : pha : plb
     ldy #$06
 .973B:
     lda.w .9752,Y
@@ -4526,7 +4510,7 @@ _01A397: ;a- x8
     bcc .A3C7
 
     phb
-    lda #$00 : pha : plb
+    lda #$80 : pha : plb
     lda #$01 : jsl _01A717_A728
     plb
     bra .A3C7
@@ -5005,6 +4989,7 @@ _01A6AB: ;a8 x8
     bne +
 
     inc $02C3
+    inc.w rng_state+1 ;update rng every work frame
     jsr _01A74A_A7A4
 +:
     lda #$08 : sta $004E,Y
@@ -5547,6 +5532,13 @@ endif
 
 .AB44: ;on pressing game start
     jsl _03F526_F527 ;play cutscene
+
+    stz.w pot_spawn_counter
+    stz.w pot_count
+    lda #$03 : sta.w pot_weapon_req
+    lda #$0A : sta.w pot_armor_state_req
+    lda #$20 : sta.w pot_extend_req
+
     lda #$05 : sta.w continues
     inc $0278
     stz $0279
@@ -5627,8 +5619,6 @@ elseif !version == 2
     jsr .AC7D_eu
 endif
     lda.w options.extra_lives : lsr : sta.w extra_lives
-    lda #$C3 : sta.w rng_state
-    lda #$01 : sta.w rng_state+1
     lda #$02 : sta $029E
     stz $02C3
     inc $0278
@@ -5802,7 +5792,6 @@ endif
     dec $1F90
 .AD8C:
     lda #$0C : sta.w !obj_arthur.active
-    jsl _019024
     lda $0292 : and #$01 : eor #$01 : sta $032E
     jsl _019136
     jsr _01BE1C
@@ -5817,11 +5806,6 @@ endif
     jsr _01AF04_AF08
     jsr .AE55
     jsr _01F66A
-    stz.w pot_spawn_counter
-    stz.w pot_count
-    lda #$03 : sta.w pot_weapon_req
-    lda #$0A : sta.w pot_armor_state_req
-    lda #$20 : sta.w pot_extend_req
     lda #$00 : jsl _0183D4_83DB
     lda #$43 : sta $02EC
     lda #$05 : sta.w timer_minutes
@@ -7636,7 +7620,7 @@ _01BDB8: ;a8 x8
 _01BE1C: ;a8 x-
     ;set up screen layout in memory
     phb
-    lda #$03 : pha : plb
+    lda #$83 : pha : plb
     !AX16
     ldx #$093E
     lda #$8000
@@ -10628,7 +10612,7 @@ _01D371:
 .D45C:
     rts
 
-.D45D: dw .D50B, .D510, .D51C, .D51C, .D527, .D543, .D510, .D510, .D510, .D510, .D510, .D510, .D549, .D549, .D510, .D510
+.D45D: dw .D50B, .D50B, .D51C, .D51C, .D527, .D543, .D510, .D510, .D510, .D510, .D510, .D510, .D549, .D549, .D510, .D510
 
 ;-----
 
@@ -13083,11 +13067,11 @@ _01E657:
     bra .E6C7
 
 .scythe2_destroy:
-    lda #$03
+    lda #$02
 .E6C7:
     sta $38
     lda $0F
-    cmp #$02
+    cmp #$03
     bne .E6D2
 
     jmp _01E224_E240
@@ -13386,17 +13370,17 @@ _01E8F9:
     stz $2D
     lda #$02 : sta $2E
     ldy #$5A : ldx #$21 : jsl set_sprite
-    lda #$06 : cop #$00
+    lda #$04 : cop #$00
 
 ;----- E911
 
     ldy #$5C : ldx #$21 : jsl set_sprite
-    lda #$06 : cop #$00
+    lda #$03 : cop #$00
 
 ;----- E91D
 
     ldy #$5E : ldx #$21 : jsl set_sprite
-    lda #$06 : cop #$00
+    lda #$03 : cop #$00
 
 ;----- E929
 
@@ -14707,7 +14691,9 @@ _01F2EE:
     lda $09 : ora #$C2 : sta $09
     stz $40
     ldy #$4C : ldx #$21 : jsl set_sprite
+    lda !obj_direction : asl : tax
     !A16
+    lda !obj_pos_x+1 : clc : adc.w _00BC65_axe2_x_offset,X : sta !obj_pos_x+1
     lda.b obj.pos_y+1 : sec : sbc #$000C : sta.b obj.pos_y+1
     !A8
     ldx #$01
@@ -14718,7 +14704,7 @@ _01F2EE:
 .F398:
     stx $30
     ldy #$30 : jsl set_speed_y
-    lda #$10 : sta $33
+    lda #$0B : sta $33
 .F3A4:
     brk #$00
 
@@ -14728,7 +14714,7 @@ _01F2EE:
     dec $33
     bne .F3A4
 
-    lda #$10 : sta $33
+    lda #$0A : sta $33
     ldy #$39 : jsl set_speed_x
     ldy #$33 : jsl set_speed_y
 .F3BE:
@@ -15291,19 +15277,8 @@ _01F722: ;a8 x8
     rts
 }
 
-if !version == 0
-{ ;F783 - FEFF
-    incbin "fill_bytes/jp/bank01a.bin" ;unused duplicate code
-    fillbyte $FF : fill 1398
-}
-elseif !version == 1
-    incbin "fill_bytes/eng/bank01a.bin"
-elseif !version == 2
-    incbin "fill_bytes/eng/bank01a.bin":121..0
-endif
-
 { ;FF00 - FF73
-_01FF00: ;a- x-
+org $81FF80 : _01FF00: ;a- x-
     .00: jml _01A87C
     .04: jml _019A93
     .08: jml _019735
@@ -15345,14 +15320,4 @@ endif
 { ;FF74 - FF76
 _01FF74:
     jmp _01FF74 ;infinite loop
-}
-
-{ ;FF77 - FFFF
-if !version == 0
-    fillbyte $FF : fill 137
-elseif !version == 1
-    incbin "fill_bytes/eng/bank01b.bin"
-elseif !version == 2
-    incbin "fill_bytes/eng/bank01b.bin":4..0
-endif
 }

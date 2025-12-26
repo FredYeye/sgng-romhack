@@ -1,12 +1,4 @@
-org $008000
-
-{ ;8000 - 80FF
-if !version == 0
-    fillbyte $FF : fill 256
-elseif !version == 1 || !version == 2
-    incbin "fill_bytes/eng/bank00a.bin"
-endif
-}
+org $808000
 
 { ;8100 - 8107
 clear_snes_regs: ;a8 x8
@@ -43,6 +35,9 @@ entry: ;emulated mode (code entry)
     ldx #$15 : ldy #$05 : jsr clear_snes_regs
     ldx #$23 : ldy #$10 : jsr clear_snes_regs
     stz !MDMAEN
+
+    lda #$01 : sta $420D ;enable fastrom mode
+
     phb
     lda #$7E : pha : plb
     !X16
@@ -77,8 +72,6 @@ entry: ;emulated mode (code entry)
     tay
     dex #2 : bpl .817F
 
-    lda #$C3 : sta.w rng_state
-    lda #$01 : sta.w rng_state+1
     lda.b #irq    : sta $0030
     lda.b #irq>>8 : sta $0031
     stz $0000
@@ -111,6 +104,7 @@ entry: ;emulated mode (code entry)
 
 { ;81F7 - 83A3
 nmi: ;a- x-
+    jml .fast : .fast:
     !AX16
     pha
     phb
@@ -244,7 +238,7 @@ irq: ;a- x-
     !A8
     pha
     phb
-    lda #$00 : pha : plb
+    lda #$80 : pha : plb
     lda !TIMEUP
 -:
     bit !HVBJOY
@@ -266,7 +260,7 @@ _0083C2:
     beq _0083C2
 
     phb
-    lda #$09 : pha : plb
+    lda #$89 : pha : plb
     phd
     !A16
     lda.w #!obj_objects.base
@@ -1094,14 +1088,6 @@ _008B05:
     dw $0000 : db $2A, $36, $01
     dw $0000 : db $38, $3C, $01
     dw $7FFF
-}
-
-{ ;8C90 - A2FF
-if !version == 0
-    fillbyte $FF : fill 5744
-elseif !version == 1 || !version == 2
-    incbin "fill_bytes/eng/bank00b.bin"
-endif
 }
 
 { ;A300 - A308
@@ -1963,7 +1949,7 @@ _00B52E:
 
 { ;B552 - B559
 _00B552: ;difficulty, loop 1 & 2
-    db $00, $02
+    db $00, $01
     db $01, $02
     db $02, $03
     db $03, $03
@@ -2321,7 +2307,7 @@ _00B984:
     db $06, $06, $06, $06
     db $06, $06, $06, $06
 if !version == 0 || !version == 1
-    db $08, $08, $08, $08
+    db $0A, $08, $0A, $08
 elseif !version == 2
     db $0C, $08, $0C, $08 ;bracelet projectile is 4px taller
 endif
@@ -2417,7 +2403,7 @@ bowgun_facing_offset: db $00, $03
 
 { ;BA68 - BA77
 weapon_limit:
-    db 2, 1 ;lance
+    db 2, 2 ;lance
     db 3, 3 ;knife
     db 4, 4 ;bowgun
     db 1, 1 ;scythe
@@ -2580,7 +2566,7 @@ bracelet_data:
 
 .decay_rate:
 if !version == 0 || !version == 1
-    db $06, $07, $07, $07, $08
+    db $08, $08, $08, $08, $09
 elseif !version == 2
     db $08, $09, $09, $09, $0A
 endif
@@ -2636,6 +2622,8 @@ _00BC65:
     db $00, $FE
 
 .BC69: dw $0000, $002C, $0058, $0084, $00B0, $00DC, $0108, $0134
+
+.axe2_x_offset: dw 5, -5
 }
 
 { ;BC79 - BCF7
@@ -3277,10 +3265,6 @@ chest_offset: ;chest x,y spawn offsets from trigger
 
     ;18
     dw $0060, $0094 ;7-5
-}
-
-{ ;C3C1 - C3D8
-    fillbyte $00 : fill 24
 }
 
 { ;C3D9 - C758
@@ -5026,7 +5010,7 @@ spawn_offset:
 { ;EF1F - EC3E
 weapon_damage:
     ;base damage, boost damage, upgrade damage, boosted upgrade damage
-    db $06, $09, $09, $0A ;lance
+    db $06, $09, $08, $0A ;lance
     db $04, $06, $07, $0A ;knife
     db $03, $04, $06, $09 ;bowgun
     db $06, $09, $09, $0A ;scythe
@@ -5042,31 +5026,12 @@ _00EC3F:
     dw $0005, $0002, $0002 ;zoom speeds
 }
 
-{ ;EC4B - ECFF
-if !version == 0
-    fillbyte $FF : fill 181
-elseif !version == 1
-    incbin "fill_bytes/eng/bank00c.bin"
-elseif !version == 2
-    incbin "fill_bytes/eng/bank00c.bin":83..0
-endif
-}
-
 { ;ED00 - FF43
     incsrc "various/sprite_set_offsets.asm"
 }
 
-{ ;FF44 - FFBF
-if !version == 0
-    fillbyte $FF : fill 124
-elseif !version == 1
-    incbin "fill_bytes/eng/bank00d.bin"
-elseif !version == 2
-    incbin "fill_bytes/eng/bank00d.bin":8..0
-endif
-}
-
 { ;snes header
+org $80FFC0
 if !version == 0
     db "CHOHMAKAIMURA        " ;title
 elseif !version == 1 || !version == 2

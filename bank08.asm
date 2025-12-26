@@ -1,4 +1,4 @@
-org $088000
+org $888000
 
 { ;8000 - C5FF
 	;screens are stored here. indexes into bank 9 meta tiles = 2x2 SW tiles = 32x32 pixels

@@ -1,4 +1,4 @@
-org $108000
+org $908000
 
 ;banks 10-1D all contain graphics / tilemaps
 
@@ -43,7 +43,7 @@ endif
     gfx_intro_castle:  incbin "graphics/game_start_cutscene_castle.bin"
     gfx_unk06:         incbin "graphics/unknown06.bin"
 
-org $18BBE6
+org $98BBE6
 
 if !version == 0
 { ;BBE6 - BC47
@@ -161,7 +161,7 @@ endif
     gfx_unk14:             incbin "graphics/unknown14.bin"
 
 if !version == 0
-{ : org $1DF642 ;F642 - FFFF
+{ : org $9DF642 ;F642 - FFFF
     ;unused data
     ;not sure if this is compressed data, i wasn't able to decompress/recompress it properly
     db $2C, $AF, $AE, $CB, $EB, $EA, $FF, $FF, $FD, $FF, $FF, $FF, $FF, $FF, $EF, $EF

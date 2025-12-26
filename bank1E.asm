@@ -1,4 +1,4 @@
-org $1E8000
+org $9E8000
 
 { ;8000 - F3D7
 stage1_earthquake_tiles:

@@ -1,10 +1,10 @@
-org $058000
+org $858000
 
 { ;8000 - 805E | a8 x-
 _058000:
     phb
     php
-    lda #$05 : pha : plb
+    lda #$85 : pha : plb
     !X16
     lda #$00 : xba : lda.w stage
     asl
@@ -182,7 +182,7 @@ meta_sprite_part_to_ram:
     and #$0006
     pha
     !A8
-    lda #$05 : pha : plb
+    lda #$85 : pha : plb
     stz $19
     lda.w _058276-2,Y : sta $18
     bpl .815E

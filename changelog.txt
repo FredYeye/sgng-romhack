@@ -1,3 +1,11 @@
+General:
+	Use fastrom to reduce slowdown
+	Improved RNG system
+	Pot system now works across stages instead of resetting on stage start
+
+Difficulty:
+	Change beginner loop 2 difficulty: expert -> normal
+
 HP adjustments:
     Wolf:          [ 10,  10,  10,  10] -> [  6,   8,  10,  10]
     Flower:        [ 10,  10,  10,  10] -> [  7,   8,  10,  10]
@@ -8,3 +16,19 @@ HP adjustments:
     Storm Cesaris: [139, 149, 155, 160] -> [120, 140, 155, 160]
 
     Icicle:        [ 10,  10,  10,  10] -> [  6,   8,  10,  10]
+
+Weapons:
+	Bracelet:
+		Projectile is slightly taller (8px -> 10px)
+		Decay rate updated: [6f, 7f, 7f, 8f] -> [8f, 8f, 8f, 9f]
+
+	Lance, level 2:
+		Projectile limit: 1 -> 2 (also reduce fire trails to prevent sprite dropouts)
+		Base damage: 9 -> 8
+
+	Axe, level 2:
+		Spawns a bit more forward to prevent hitting walls behind arthur
+		Lower upwards trajectory so it travels forward faster (time: 32f -> 21f)
+
+	Scythe, level 2:
+		Swipe count: 3 -> 2

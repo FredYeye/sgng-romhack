@@ -1,4 +1,4 @@
-org $028000
+org $828000
 
 { ;8000 - 8047
 _028000: ;a- x-
@@ -4208,14 +4208,4 @@ _02FF57: ;a x
 .FFA2:
     !AX8
     rts
-}
-
-{ ;FFA5 - FFFF
-if !version == 0
-    fillbyte $FF : fill 91
-elseif !version == 1
-    incbin "fill_bytes/eng/bank02a.bin"
-elseif !version == 2
-    incbin "fill_bytes/eng/bank02a.bin":5..0
-endif
 }

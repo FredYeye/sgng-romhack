@@ -1,4 +1,4 @@
-org $1F8000
+org $9F8000
 
 { ;8000 -
 ;stage1_earthquake_tiles: cont'd from bank 1E
