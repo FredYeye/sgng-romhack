@@ -4989,7 +4989,7 @@ _01A6AB: ;a8 x8
     bne +
 
     inc $02C3
-    inc.w rng_state+1 ;update rng every work frame
+    jsl call_rng ;update rng every work frame
     jsr _01A74A_A7A4
 +:
     lda #$08 : sta $004E,Y

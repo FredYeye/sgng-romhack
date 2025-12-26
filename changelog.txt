@@ -2,6 +2,7 @@ General:
 	Use fastrom to reduce slowdown
 	Improved RNG system
 	Pot system now works across stages instead of resetting on stage start
+    Speed up princess dialogue (wip)
 
 Difficulty:
 	Change beginner loop 2 difficulty: expert -> normal
