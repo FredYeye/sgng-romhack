@@ -14697,9 +14697,9 @@ _01F2EE:
     lda $09 : ora #$C2 : sta $09
     stz $40
     ldy #$4C : ldx #$21 : jsl set_sprite
-    lda !obj_direction : asl : tax
+    lda.b obj.direction : asl : tax
     !A16
-    lda !obj_pos_x+1 : clc : adc.w _00BC65_axe2_x_offset,X : sta !obj_pos_x+1
+    lda.b obj.pos_x+1 : clc : adc.w _00BC65_axe2_x_offset,X : sta.b obj.pos_x+1
     lda.b obj.pos_y+1 : sec : sbc #$000C : sta.b obj.pos_y+1
     !A8
     ldx #$01
