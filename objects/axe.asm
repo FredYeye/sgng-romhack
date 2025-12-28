@@ -53,7 +53,9 @@ upgraded_create:
     lda $09 : ora #$C2 : sta $09
     stz $40
     ldy #$4C : ldx #$21 : jsl set_sprite
+    lda !obj_direction : asl : tax
     !A16
+    lda !obj_pos_x+1 : clc : adc.w _00BC65_axe2_x_offset,X : sta !obj_pos_x+1
     lda.b obj.pos_y+1 : sec : sbc #$000C : sta.b obj.pos_y+1
     !A8
     ldx #$01
@@ -64,7 +66,7 @@ upgraded_create:
 .F398:
     stx $30
     ldy #$30 : jsl set_speed_y
-    lda #$10 : sta $33
+    lda #$0B : sta $33
 .F3A4:
     brk #$00
 
@@ -74,7 +76,7 @@ upgraded_create:
     dec $33
     bne .F3A4
 
-    lda #$10 : sta $33
+    lda #$0A : sta $33
     ldy #$39 : jsl set_speed_x
     ldy #$33 : jsl set_speed_y
 .F3BE:

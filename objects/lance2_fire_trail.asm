@@ -6,17 +6,17 @@ create:
     stz $2D
     lda #$02 : sta $2E
     ldy #$5A : ldx #$21 : jsl set_sprite
-    lda #$06 : cop #$00
+    lda #$04 : cop #$00
 
 ;----- E911
 
     ldy #$5C : ldx #$21 : jsl set_sprite
-    lda #$06 : cop #$00
+    lda #$03 : cop #$00
 
 ;----- E91D
 
     ldy #$5E : ldx #$21 : jsl set_sprite
-    lda #$06 : cop #$00
+    lda #$03 : cop #$00
 
 ;----- E929
 

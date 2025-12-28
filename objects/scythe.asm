@@ -67,11 +67,11 @@ destroy:
     bra upgraded_destroy_E6C7
 
 upgraded_destroy:
-    lda #$03
+    lda #$02
 .E6C7:
     sta $38
     lda $0F
-    cmp #$02
+    cmp #$03
     bne .E6D2
 
     jmp _01E224_E240
