@@ -1455,7 +1455,7 @@ _08E400:
 
 	;tile count
 
-	;offset into 058274 (x,y offsets) when anded with 0x3FFF. 2 upper bits appear to change behavior to load more data
+	;offset into 058276 (x,y offsets) when anded with 0x3FFF. 2 upper bits appear to change behavior to load more data
 	;(more data here if 2 upper bits were clear, needs more research)
 
 	;vram tile + h/v flip, also sprite centerpoint (upper byte)?
@@ -1463,12 +1463,12 @@ _08E400:
 	;animation timer (and sometimes index also)
 
 .E5A1: ;walk
-	db $0D : dw $801C, $0000, $0104
-	db $10 : dw $8036, $0000, $0204
-	db $0E : dw $8056, $0000, $0304
-	db $0C : dw $8072, $0000, $0404
-	db $0E : dw $808A, $0000, $0504
-	db $0F : dw $80A6, $0000, $0684
+	db $0D : dw meta(offset(sprite_offsets, sprite_offsets_arthur_walk_1), 2), $0000, $0104
+	db $10 : dw meta(offset(sprite_offsets, sprite_offsets_arthur_walk_2), 2), $0000, $0204
+	db $0E : dw meta(offset(sprite_offsets, sprite_offsets_arthur_walk_3), 2), $0000, $0304
+	db $0C : dw meta(offset(sprite_offsets, sprite_offsets_arthur_walk_4), 2), $0000, $0404
+	db $0E : dw meta(offset(sprite_offsets, sprite_offsets_arthur_walk_5), 2), $0000, $0504
+	db $0F : dw meta(offset(sprite_offsets, sprite_offsets_arthur_walk_6), 2), $0000, $0684
 	dw $0000
 
 .E5CD: ;neutral jump
@@ -1480,7 +1480,7 @@ _08E400:
 	dw $0000
 
 .E5DF: ;idle
-	db $0E : dw $8000, $0000, $00FF
+	db $0E : dw meta(offset(sprite_offsets, sprite_offsets_arthur_idle), 2), $0000, $00FF
 	dw $0000
 
 .E5E8: ;crouch
@@ -2231,7 +2231,7 @@ _08E400:
 	dw $0000
 
 .F52E: ;magician
-	db $0A : dw meta(offset(_058276-2, _058276_magician), 2), $0600, $000D
+	db $0A : dw meta(offset(sprite_offsets-2, sprite_offsets_magician), 2), $0600, $000D
 	db $09 : dw $8484, $0600, $0105
 	db $13 : dw $8496, $0600, $020C
 	db $13 : dw $0496, $0613, $0614, $0602, $0603, $0604, $0605, $0606, $0607, $0608, $0609, $060A, $060B, $060C, $060D, $060E, $060F, $0610, $0611, $0612, $0205
@@ -2240,7 +2240,7 @@ _08E400:
 	db $13 : dw $0496, $0619, $061A, $0602, $0603, $0604, $0605, $0606, $0607, $0608, $0609, $060A, $060B, $060C, $060D, $060E, $060F, $0610, $0611, $0612, $0205
 	db $13 : dw $8496, $0600, $0315
 	db $09 : dw $8484, $0600, $0104
-	db $0A : dw meta(offset(_058276-2, _058276_magician), 2), $0600, $0084
+	db $0A : dw meta(offset(sprite_offsets-2, sprite_offsets_magician), 2), $0600, $0084
 	dw $0000
 
 .F606:

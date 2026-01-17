@@ -588,7 +588,7 @@ _0183D4: ;a8 x16
 
 .841B:
     !AX8
-    inc $0323
+    inc.w layer3_needs_update
     plb
     rtl
 }
@@ -2020,7 +2020,7 @@ _018F80: ;a8 x8
     lda.w timer_tens     : and #$00FF : ora #$2580 : sta $7F90F8
     lda.w timer_seconds : and #$00FF : ora #$2580 : sta $7F90FA
     !A8
-    inc $0323
+    inc.w layer3_needs_update
 .8FCD:
     lda.w hud_update_lives
     beq .8FE9
@@ -2032,7 +2032,7 @@ _018F80: ;a8 x8
     ora #$2580
     sta $7F9106
     !A8
-    inc $0323
+    inc.w layer3_needs_update
 .8FE9:
     rtl
 
@@ -2064,7 +2064,7 @@ _018F80: ;a8 x8
     bpl .9009
 
     !A8
-    inc $0323
+    inc.w layer3_needs_update
     rts
 }
 
@@ -2306,7 +2306,8 @@ _01918E:
 
 { ;9226 - 92AC
 set_direction32: ;a- x-
-;todo: maybe add a .arthur label here
+
+.toward_arthur: ;todo: use this label
     !AX16
     ldx.w #!obj_arthur.base
 .custom_obj: ;a16 x16
@@ -5583,9 +5584,9 @@ endif
     beq .AB9C
 
     jsl _049252
-    lda $02AD : pha
+    lda.w current_weapon_stored : pha
     jsr .ABB3
-    pla : sta $02AD
+    pla : sta.w current_weapon_stored
     lda #$02
 .AB9C:
     sta $0278
@@ -5734,7 +5735,7 @@ endif
     jsl _018CE2
     jsl _0180A6
     jsr _01B4DE
-    lda $02AD : sta.w weapon_current
+    lda.w current_weapon_stored : sta.w weapon_current
     and #$1E  : sta.w existing_weapon_type
     lda.w arthur_state_stored
     cmp #!arthur_state_transformed
@@ -6111,7 +6112,7 @@ _01B14B: ;a8 x8
     bit #!start
     beq .ret
 
-    lda #$36 : jsl _018049_8053 ;pause sound
+    lda #!sfx_pause : jsl _018049_8053
     lda #$F3 : jsl _018049_8053
     ldx #$90
 .B16A:
@@ -9105,7 +9106,7 @@ _01C8A7: ;a x
     stz $14E3
     stz $14F0
     lda.w weapon_current : jsr .CBDA
-    inc $0323
+    inc.w layer3_needs_update
 .C93E:
     rts
 
@@ -9223,7 +9224,7 @@ _01C8A7: ;a x
     ora #$8000
     sta $7F90E2,X
     !A8
-    inc $0323
+    inc.w layer3_needs_update
     inc $14B4
     rts
 
@@ -9271,7 +9272,7 @@ _01C8A7: ;a x
     inc
     sta $7F90E0
     !A8
-    inc $0323
+    inc.w layer3_needs_update
     rts
 
 ;-----
@@ -9321,7 +9322,7 @@ _01C8A7: ;a x
                            ora #$8000 : sta $7F90E2,X
     !A8
 .CB2E:
-    inc $0323
+    inc.w layer3_needs_update
     dec $14B4
     bpl .CB55
 
@@ -9364,7 +9365,7 @@ _01C8A7: ;a x
     lda #$A1AE : sta $7F90DC : sta $7F90E2
     lda #$2DC7 : jsr .CA86
     lda.w weapon_current : jsr .CBDA
-    inc $0323
+    inc.w layer3_needs_update
     stz.w !obj_upgrade2.active
     stz.w !obj_upgrade2.flags1
     stz $14B5
@@ -11151,7 +11152,7 @@ _01D72B: ;a8 x8
     stz.w upgrade_state_stored
     stz.w shield_state_stored
     stz.w shield_type_stored
-    lda.w weapon_current : and #$FE : sta $02AD
+    lda.w weapon_current : and #$FE : sta.w current_weapon_stored
 .D8AF:
     brk #$00
 
@@ -11730,7 +11731,7 @@ _01DC56: ;a8 x8
     sta $0278
     stz $0279
     lda #!arthur_state_steel : sta.w arthur_state_stored
-    lda $14D3 : and #$FE : sta $02AD
+    lda.w weapon_current : and #$FE : sta.w current_weapon_stored
     stz.w shield_state_stored
     stz.w shield_type_stored
     stz.w upgrade_state_stored
@@ -11749,7 +11750,7 @@ _01DCCF: ;a8 x-
     stz.w shield_type_stored
     stz.w upgrade_state_stored
     lda.w armor_state : sta.w arthur_state_stored
-    lda.w weapon_current : sta $02AD
+    lda.w weapon_current : sta.w current_weapon_stored
     lda.w !obj_upgrade.active
     beq .DD00
 

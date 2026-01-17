@@ -602,16 +602,16 @@ _0086FC: ;a8 x8
 
 { ;8700 - 8734
 _008700: ;a8 x-
-    lda $0323
+    lda.w layer3_needs_update
     beq .ret
 
     lda #$80   : sta !VMAIN
-    stz $0323
+    stz.w layer3_needs_update
     !A16
     lda $0318  : sta !VMADDL
     lda #$1801 : sta !DMAP0
-    lda #$9000 : sta !A1T0L
-    lda #$007F : sta !A1B0
+    lda.w #_7F9000     : sta !A1T0L
+    lda.w #_7F9000>>16 : sta !A1B0
     lda $031A  : sta !DAS0L
     !A8
     lda #$01   : sta !MDMAEN
@@ -901,7 +901,7 @@ _0089F4: ;a8 x8
 +:
     stz !BG3HOFS
     stz !BG3HOFS
-    lda #$C0 : sta !BG3VOFS
+    lda #$C0 : sta !BG3VOFS ;only draw the bottom of layer 3 (HUD)
     stz !BG3VOFS
     rts
 }

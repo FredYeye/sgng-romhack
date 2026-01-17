@@ -124,7 +124,7 @@ _0484B9:
     bne .8565
 
     !A8
-    inc $0323
+    inc.w layer3_needs_update
     plx
     iny
     jmp .84DC
@@ -139,7 +139,7 @@ _0484B9:
     ora $1EC3
     sta $7F9000,X
     !A8
-    inc $0323
+    inc.w layer3_needs_update
     iny
     inx #2
     rts
@@ -1484,7 +1484,7 @@ _049121: ;a? x?
     and #$0F
     jsr .920C
     !X8
-    inc $0323
+    inc.w layer3_needs_update
     rts
 
 ;-----
@@ -1681,7 +1681,7 @@ _0493F2:
 
 ;-----
 
-.9446:
+.9446: ;tile shapes / types
     db $00, $01, $70, $71, $72, $73, $74, $75, $76, $77, $78, $79, $7A, $7B, $7C, $7D
     db $7E, $7F, $0F, $31, $32, $33, $34, $35, $36, $37, $38, $39, $3A, $3B, $3C, $3D
     db $3E, $3F, $23, $24, $25, $26, $27, $28, $29, $2A, $2B, $2C, $2D, $2E, $2F, $17

@@ -306,7 +306,7 @@ _028176: ;a- x-
 
 .819F:
     !A8
-    dec.w weapon_item_count
+    dec.w pot.weapon_item_count
     pla : pla
     bra _0281A8_81B5
 
@@ -519,7 +519,7 @@ _02821B: ;a8 x8
 
 .create_object_offsets:
     dw arthur_create, thunk_lance_create, thunk_lance2_create, thunk_knife_create, thunk_knife2_create, thunk_bowgun_create, thunk_bowgun2_create, thunk_scythe_create
-    dw thunk_scythe2_create, torch_create, thunk_torch2_create, thunk_axe_create, thunk_axe2_create, thunk_triblade_create, thunk_triblade2_create, thunk_bracelet_create
+    dw thunk_scythe2_create, thunk_torch_create, thunk_torch2_create, thunk_axe_create, thunk_axe2_create, thunk_triblade_create, thunk_triblade2_create, thunk_bracelet_create
     dw thunk_bracelet2_create, thunk_lance2_fire_trail_create, thunk_knife2_shimmer_create, thunder_create, seek_create, shield_magic_create, fire_dragon_create, tornado_create
     dw lightning_create, nuclear_create, armor_upgrade_vfx_create, arthur_plume_create, arthur_face_create, stage4_transform_create, shield_create, armor_piece_create
     dw shield_piece_create, weapon_hit_create, pot_create, bracelet_tail_create, enemy_spawner_create, $8780, _02EEEA_create, stone_pillar_create
@@ -1668,56 +1668,56 @@ pot_creation: ;a8 x8
 
 .local: ;8C6E
     stz $3A
-    inc.w pot_spawn_counter ;spawned enemies that can carry pot
-    lda.w pot_spawn_counter
+    inc.w pot.enemy_counter
+    lda.w pot.enemy_counter
     cmp #$04
     bne .ret  ;return if this isn't the 4th pot enemy
 
-    stz.w pot_spawn_counter ;reset enemy counter
+    stz.w pot.enemy_counter ;reset enemy counter
     clc
-    lda.w weapon_item_count
-    adc.w point_statue_count
+    lda.w pot.weapon_item_count
+    adc.w pot.point_statue_count
     cmp #$03
     bcs .ret  ;return if already at max drop limit
 
-    lda.w weapon_item_count
+    lda.w pot.weapon_item_count
     cmp #$01
     beq .weapon_exists
 
-    lda.w point_statue_count
+    lda.w pot.point_statue_count
     cmp #$02
     beq .point_statues_exist
 
-    inc.w pot_count
-    lda.w pot_count
-    cmp.w pot_weapon_req ;required pot count to drop weapon
+    inc.w pot.counter
+    lda.w pot.counter
+    cmp.w pot.weapon_req
     bne .drop_statue
 
 .point_statues_exist:
     clc
     adc #$03
-    sta.w pot_weapon_req
+    sta.w pot.weapon_req
     lda #$FF  ;weapon
     bra .create_pot
 
 .drop_statue:
-    cmp.w pot_armor_state_req ;required pot count to drop armor statue
+    cmp.w pot.armor_statue_req
     bne .statue_or_1up
 
 .weapon_exists:
     clc
     adc #$0A
-    sta.w pot_armor_state_req
+    sta.w pot.armor_statue_req
     lda #$02  ;armor statue
     bra .create_pot
 
 .statue_or_1up:
-    cmp.w pot_extend_req ;required pot count to drop 1up
+    cmp.w pot.extend_req
     bne .statue
 
     clc
     adc #$30
-    sta.w pot_extend_req
+    sta.w pot.extend_req
     lda #$03  ;1up
     bra .create_pot
 
@@ -3841,7 +3841,7 @@ _02FDB3: ;a8 x-
 
 .FDB7: ;a8 x-
     lda #$8C : sta.w !obj_arthur.active
-    lda $0444 : ora #$80 : sta $0444 ;todo: label bitflags for arthur
+    lda.w !obj_arthur.flags1 : ora #$80 : sta.w !obj_arthur.flags1
     lda $0276 : ora #$02 : sta $0276
     rts
 }
@@ -4004,8 +4004,7 @@ _02FE1E: ;a? x?
 
 { ;FEBC - FF21
 _02FEBC: ;a8 x-
-    ;todo: rename these labels
-    lda $0444
+    lda.w !obj_arthur.flags1
     bmi .FF20
 
     bit $09
@@ -4020,7 +4019,7 @@ _02FEBC: ;a8 x-
     bra .FEE4
 
 .arthur_overlap_check: ;a8 x-
-    lda $0444 ;arthur $08
+    lda.w !obj_arthur.flags1
     bmi .FF20
 
 .FED8: ;a8 x-
