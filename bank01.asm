@@ -128,18 +128,18 @@ _0180B9: ;a8 x-
     !X16
 
     ;backup pot data
-    ldx.w pot_spawn_counter : stx $0000
-    ldx.w pot_weapon_req    : stx $0002
-    ldx.w pot_extend_req    : stx $0004
-    ldx.w weapon_item_count : stx $0006
+    ldx.w pot.enemy_counter     : stx $0000
+    ldx.w pot.weapon_req        : stx $0002
+    ldx.w pot.extend_req        : stx $0004
+    ldx.w pot.weapon_item_count : stx $0006
 
     ldx #$031E : ldy #$1C93 : jsr clear_ram
 
     ;restore pot data after clearing ram
-    ldx $0000 : stx.w pot_spawn_counter
-    ldx $0002 : stx.w pot_weapon_req
-    ldx $0004 : stx.w pot_extend_req
-    ldx $0006 : stx.w weapon_item_count
+    ldx $0000 : stx.w pot.enemy_counter
+    ldx $0002 : stx.w pot.weapon_req
+    ldx $0004 : stx.w pot.extend_req
+    ldx $0006 : stx.w pot.weapon_item_count
 
     !AX8
     rtl
@@ -152,11 +152,11 @@ clear_ram: ;a8 x16
     ;X: wram offset
     ;Y: len
 
-    stz !WMADDH
-    stx !WMADDL
+    stz.w WMADDH
+    stx.w WMADDL
     sty !DAS0L
 
-    ldx.w #!WMDATA<<8|0|8
+    ldx.w #WMDATA<<8|0|8
 .zero_src:
     stx !DMAP0
 
@@ -5540,11 +5540,11 @@ endif
 .AB44: ;on pressing game start
     jsl _03F526_F527 ;play cutscene
 
-    stz.w pot_spawn_counter
-    stz.w pot_count
-    lda #$03 : sta.w pot_weapon_req
-    lda #$0A : sta.w pot_armor_state_req
-    lda #$20 : sta.w pot_extend_req
+    stz.w pot.enemy_counter
+    stz.w pot.counter
+    lda #$03 : sta.w pot.weapon_req
+    lda #$0A : sta.w pot.armor_statue_req
+    lda #$20 : sta.w pot.extend_req
 
     lda #$05 : sta.w continues
     inc $0278

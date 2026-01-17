@@ -71,6 +71,10 @@
     !APUI02   = $2142 ;Main CPU to Sound CPU Communication Port 2
     !APUI03   = $2143 ;Main CPU to Sound CPU Communication Port 3
 
+    WMDATA = $2180 ;WRAM Data Read/Write
+    WMADDL = $2181 ;WRAM Address (lower 8bit)
+    WMADDH = $2183 ;WRAM Address (upper 1bit)
+
     !NMITIMEN = $4200 ;Interrupt Enable and Joypad Request
     !WRIO     = $4201 ;Joypad Programmable I/O Port (Open-Collector Output)
     !WRMPYA   = $4202 ;Set unsigned 8bit Multiplicand
