@@ -10,6 +10,7 @@ Stage 1:
 
 Stage 2:
 	Speed up raft section: 200s -> 177s
+	Slower wave motion
 	Remove 1 Flying Killer (wip)
 
 Difficulty:

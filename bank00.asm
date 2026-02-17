@@ -72,6 +72,7 @@ entry: ;emulated mode (code entry)
     tay
     dex #2 : bpl .817F
 
+    lda.b #$01 : sta.w rng_state+1
     lda.b #irq    : sta $0030
     lda.b #irq>>8 : sta $0031
     stz $0000
@@ -262,10 +263,7 @@ _0083C2:
     phb
     lda #$89 : pha : plb
     phd
-    !A16
-    lda.w #!obj_objects.base
-    tcd
-    !A8
+    pea.w !obj_objects.base : pld
     lda #$1F : sta $0036
     stz $0037
 .83DE:
