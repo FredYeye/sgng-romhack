@@ -481,7 +481,7 @@ create:
 ;----- A998
 
     ldx #$42 : jsl update_pos_xy_2
-    lda $02C3
+    lda.w frame_counter
     and #$0F
     beq .A9AC
 
@@ -676,10 +676,7 @@ _AAB3:
     bcc .AB25
 
 .AB15:
-    txa
-    clc
-    adc.w #!obj_size
-    tax
+    txa : clc : adc.w #obj.ext.len : tax
     dey
     bne .AAEA
 

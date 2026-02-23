@@ -17,8 +17,7 @@ entry: ;emulated mode (code entry)
     clc
     xce
     !X16
-    ldx #$0275
-    txs
+    ldx #stack[7].top : txs
     !X8
     lda #$8F : sta.w INIDISP
     ldx #$0D
@@ -64,20 +63,17 @@ entry: ;emulated mode (code entry)
     ldy #$90
     ldx #$0C
 .817F:
-    lda _00A309+0,X : sta $0052,Y
-    lda _00A309+1,X : sta $0053,Y
-    sec
-    tya
-    sbc #$18
-    tay
+    lda.w stack_offsets+0,X : sta.w !task_offset.stack_id+0,Y
+    lda.w stack_offsets+1,X : sta.w !task_offset.stack_id+1,Y
+    sec : tya : sbc.b #task.len : tay
     dex #2 : bpl .817F
 
     lda.b #$01 : sta.w rng_state+1
     lda.b #irq    : sta $0030
     lda.b #irq>>8 : sta $0031
-    stz $0000
-    lda #$80 : sta $0001
-    lda #$06 : sta $0002
+    stz $0000 ;lowest byte of spc_code_start address
+    lda.b #spc_code_start>>8  : sta $0001
+    lda.b #spc_code_start>>16 : sta $0002
     !A16
     lda $02F3
     cmp #$3901
@@ -97,8 +93,8 @@ entry: ;emulated mode (code entry)
     lda #$01 : sta $02F1
     jsl enable_nmi
     cli
-    lda.b #_01FF00>>8 : sta $40
-    ldy #$00 : lda.b #_01FF00_00 : jsl _01A6FE
+    lda.b #_01FF00>>8 : sta.b task_function_pointer+1
+    ldy.b #task[0].base : lda.b #_01FF00_00 : jsl _01A6FE
     jsl _03E7FE
     jml _01A6AB
 }
@@ -118,7 +114,7 @@ nmi: ;a- x-
     !AX8
     pha
     plb
-    inc $02C4
+    inc.w video_frame_counter
     stz !HDMAEN
     jsl disable_nmi
     jsr _0089F4
@@ -132,11 +128,11 @@ nmi: ;a- x-
     stz.w OAMADDH
     lda #$00 : sta !DMAP0
     lda #$04 : sta !BBAD0
-    lda #$00 : sta !A1T0L
-    lda #$F1 : sta !A1T0H
-    lda #$7E : sta !A1B0
-    lda #$20 : sta !DAS0L
-    lda #$02 : sta !DAS0H
+    lda.b #sprite_attributes     : sta !A1T0L
+    lda.b #sprite_attributes>>8  : sta !A1T0H
+    lda.b #sprite_attributes>>16 : sta !A1B0
+    lda.b #$0220    : sta !DAS0L
+    lda.b #$0220>>8 : sta !DAS0H
     lda #$01 : sta !MDMAEN
     jsr _008669
     jsr _00893C
@@ -205,21 +201,19 @@ nmi: ;a- x-
     lda #$98 : sta !HTIMEL : stz !HTIMEH
     lda #$26 : sta !VTIMEL : stz !VTIMEH
 
+    ;tick task timers
     ldx #$A8
 .837D:
-    lda $0036,X
+    lda.w !task_offset[-1].state,X
     cmp #$01
     bne +
 
-    dec $0037,X
+    dec.w !task_offset[-1].timer,X
     bne +
 
-    lda #$04 : sta $0036,X
+    lda #$04 : sta.w !task_offset[-1].state,X
 +:
-    sec
-    txa
-    sbc #$18
-    tax
+    sec : txa : sbc.b #task.len : tax
     bne .837D
 
     jsr _00853D
@@ -261,9 +255,9 @@ _0083C2:
     beq _0083C2
 
     phb
-    lda #$89 : pha : plb
+    lda.b #bank09>>16 : pha : plb
     phd
-    pea.w !obj_objects.base : pld
+    !A16 : lda.w #!obj_objects.base : tcd : !A8
     lda #$1F : sta $0036
     stz $0037
 .83DE:
@@ -468,11 +462,11 @@ _008577: ;a8 x-
     stz.w OAMADDH
     lda #$00 : sta !DMAP0
     lda #$04 : sta !BBAD0
-    lda #$00 : sta !A1T0L
-    lda #$F1 : sta !A1T0H
-    lda #$7E : sta !A1B0
-    lda #$20 : sta !DAS0L
-    lda #$02 : sta !DAS0H
+    lda.b #sprite_attributes     : sta !A1T0L
+    lda.b #sprite_attributes>>8  : sta !A1T0H
+    lda.b #sprite_attributes>>16 : sta !A1B0
+    lda.b #$0220    : sta !DAS0L
+    lda.b #$0220>>8 : sta !DAS0H
     lda #$01 : sta !MDMAEN
     rts
 }
@@ -1093,9 +1087,9 @@ _00A300: dl $7EF400, $7F9E00, $7F9800
 }
 
 { ;A309 - A316
-_00A309:
-    ;values to be transferred to the stack register
-    dw $0125, $0155, $0185, $01B5, $01E5, $0215, $0245
+stack_offsets:
+    dw stack[0].top, stack[1].top, stack[2].top, stack[3].top
+    dw stack[4].top, stack[5].top, stack[6].top
 }
 
 { ;A317 - A34C
@@ -1208,13 +1202,14 @@ _00A4E9:
     dw $00F0, $01E0, $00F0, $01E0
 }
 
-{ ;A531 - A540
-    _00A531: dw $0000, $0060, $00C0, $0120, $0180, $01A8, $01D0, $01F8
-}
+{ ;A531 - A560
+sprite_queue:
 
-{ ;A541 - A560
-    ;offsets into $13D1 obj list counters
-_00A541:
+.offsets:
+    dw sprite_prio.queue_0, sprite_prio.queue_1, sprite_prio.queue_2, sprite_prio.queue_3
+    dw sprite_prio.queue_4, sprite_prio.queue_5, sprite_prio.queue_6, sprite_prio.queue_7
+
+.A541: ;offsets into $13D1 obj list counters
     dw $0000, $0002, $0004, $0006, $0008, $000A, $000C, $000E
     dw $0000, $0002, $0004, $0006, $0008, $000A, $000C, $000E ;unused duplicate
 }
@@ -1410,7 +1405,7 @@ extend_table: db $04, $07, $08
 }
 
 { ;A7E6 - A7F1
-_01A7E6: ;unused
+_00A7E6: ;unused
     dw $0000, $FFE0
     dw $0000, $0000
     dw $FFB8, $0000
@@ -1924,7 +1919,7 @@ _00B440:
 }
 
 { ;B4FE - B52D
-_01B4FE:
+_00B4FE:
     ;stage, checkpoint, timer
     db $00, $00 : dw $018D
     db $01, $02 : dw $02AC
@@ -2139,7 +2134,7 @@ _00B76D:
 }
 
 { ;B7A5 - B7D4
-_01B7A5:
+_00B7A5:
 
 .B7A5: db $FF, $00, $04, $FF, $08, $10, $14, $FF, $0C, $18, $1C, $FF, $FF, $FF, $FF, $FF
 
@@ -2484,18 +2479,18 @@ _00BAE6:
 }
 
 { ;BB0E - BB15
-_01BB0E:
+_00BB0E:
 
 .BB0E: db $03, $04, $04, $03
 .BB12: db $32, $31, $31, $32
 }
 
 { ;BB16 - BB19
-_01BB16: db $32, $31, $31, $32
+_00BB16: db $32, $31, $31, $32
 }
 
 { ;BB1A - BB21
-_01BB1A: dw $FFC0, $0040
+_00BB1A: dw $FFC0, $0040
 
 .BB1E: dw $0006, $FFFA
 }
@@ -2511,8 +2506,8 @@ _00BB22: ;bowgun
     db $01, $01, $01
 
 .BB2E:
-    dw !obj_objects.base+!obj_size*0, !obj_objects.base+!obj_size*1, !obj_objects.base+!obj_size*2
-    dw !obj_objects.base+!obj_size*0, !obj_objects.base+!obj_size*1, !obj_objects.base+!obj_size*2
+    dw !obj_objects.base+obj.ext.len*0, !obj_objects.base+obj.ext.len*1, !obj_objects.base+obj.ext.len*2
+    dw !obj_objects.base+obj.ext.len*0, !obj_objects.base+obj.ext.len*1, !obj_objects.base+obj.ext.len*2
 
 .BB3A:
     db $1C, $1E, $00
@@ -2554,7 +2549,7 @@ _00BC00:
 }
 
 { ;BC08 -
-_01BC08:
+_00BC08:
 
 .BC08: dw $0000, $4000
 .BC0C: dw $FFF9, $0007
@@ -3762,7 +3757,7 @@ db $40, $80, $C0 ;unused?
 }
 
 { ;CDD7 - CE80
-_01CDD7:
+_00CDD7:
 
 .CDD7: dw offset(.CDE1, .CDE1), offset(.CDE1, .CE01), offset(.CDE1, .CE21), offset(.CDE1, .CE41), offset(.CDE1, .CE61)
 

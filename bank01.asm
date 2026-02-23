@@ -18,12 +18,12 @@ set_hp: ;a- x-
 
 { ;8021 - 8048
 _018021: ;a8 x-
-    lda #$01 : jsl _01A717_A728
-    stz $1F95
+    lda.b #1 : jsl current_task_suspend
+    stz.w in_armor_up_anim
     stz $1F96
     jsl _018593
     jsl _02821B
-    jsl _0184C3
+    jsl fill_sprite_queue
     jsl _0185BB
     inc $0379
     lda $037B
@@ -185,8 +185,7 @@ _0180C7: ;a8 x8
     lda #$80 : sta !VMAIN
     !AX16
 .80E5:
-    lda #$0000
-    tcd
+    lda #$0000 : tcd
     lda.w ram_to_vram_offsets,  X : sta $0000
     lda.w ram_to_vram_offsets+2,X : sta $0002
     lda.w ram_to_vram_offsets+3,X : sta !VMADDL
@@ -208,8 +207,7 @@ _01810E: ;a8 x-
     php
     lda #$00 : sta !VMAIN
     !AX16
-    lda #$0000
-    tcd
+    lda #$0000 : tcd
     ldy.w _00DF21,X
     stz $00
     !A8
@@ -374,8 +372,7 @@ _01826E: ;a8 x8
 .827A:
     lda #$80 : sta !VMAIN
     !AX16
-    lda #$0000
-    tcd
+    lda #$0000 : tcd
     lda.w _00A4D9+0,X : sta $00
     lda.w _00A4D9+2,X : sta $02
     lda.w _00A4D9+3,X : sta !VMADDL
@@ -694,33 +691,30 @@ _0184B3:
 }
 
 { ;84C3 - 8592
-_0184C3: ;a- x-
+fill_sprite_queue: ;a- x-
     php
     phd
     !AX16
-    stz $13D1
-    stz $13D3
-    stz $13D5
-    stz $13D7
-    stz $13D9
-    stz $13DB
-    stz $13DD
-    stz $13DF
-    lda.w _00A531+0  : sta $13E1
-    lda.w _00A531+2  : sta $13E3
-    lda.w _00A531+4  : sta $13E5
-    lda.w _00A531+6  : sta $13E7
-    lda.w _00A531+8  : sta $13E9
-    lda.w _00A531+10 : sta $13EB
-    lda.w _00A531+12 : sta $13ED
-    lda.w _00A531+14 : sta $13EF
+    stz.w !sprite_prio_offset.count+0*2
+    stz.w !sprite_prio_offset.count+1*2
+    stz.w !sprite_prio_offset.count+2*2
+    stz.w !sprite_prio_offset.count+3*2
+    stz.w !sprite_prio_offset.count+4*2
+    stz.w !sprite_prio_offset.count+5*2
+    stz.w !sprite_prio_offset.count+6*2
+    stz.w !sprite_prio_offset.count+7*2
+    lda.w sprite_queue_offsets+0  : sta.w !sprite_prio_offset.offsets+0*2
+    lda.w sprite_queue_offsets+2  : sta.w !sprite_prio_offset.offsets+1*2
+    lda.w sprite_queue_offsets+4  : sta.w !sprite_prio_offset.offsets+2*2
+    lda.w sprite_queue_offsets+6  : sta.w !sprite_prio_offset.offsets+3*2
+    lda.w sprite_queue_offsets+8  : sta.w !sprite_prio_offset.offsets+4*2
+    lda.w sprite_queue_offsets+10 : sta.w !sprite_prio_offset.offsets+5*2
+    lda.w sprite_queue_offsets+12 : sta.w !sprite_prio_offset.offsets+6*2
+    lda.w sprite_queue_offsets+14 : sta.w !sprite_prio_offset.offsets+7*2
     ldy.w #$34 ;weapons + magic + object + upgrade slot count (i.e. everything but arthur)
-    lda.w #obj_start+obj[1]
-    tcd
-    clc
-    lda.w camera_x+1 : adc #$0080 : sta $0000
-    clc
-    lda.w camera_y+1 : adc #$0080 : sta $0002
+    lda.w #obj_start+obj[1] : tcd
+    clc : lda.w camera_x+1 : adc #$0080 : sta $0000
+    clc : lda.w camera_y+1 : adc #$0080 : sta $0002
 .852A:
     lda $00
     and #$00FF
@@ -753,15 +747,13 @@ _0184C3: ;a- x-
     phy
     and #$0007
     asl
-    tax
-    ldy $13E1,X
-    tdc
-    sta $11B1,Y
-    inc $13E1,X
-    inc $13E1,X
+    tax ;sprite priority * 2
+    ldy.w !sprite_prio_offset.offsets,X
+    tdc : sta.w !sprite_prio_offset.queues,Y ;store obj offset in queue
+    inc.w !sprite_prio_offset.offsets,X : inc.w !sprite_prio_offset.offsets,X
     txy
-    ldx.w _00A541,Y
-    inc $13D1,X
+    ldx.w sprite_queue_A541,Y
+    inc.w !sprite_prio_offset.count,X
     ply
     bra .8587
 
@@ -769,10 +761,7 @@ _0184C3: ;a- x-
     lda $08 : and #$BFFF : sta $08 ;clear "in range / playfield"(?) flag?
 
 .8587:
-    clc
-    tdc
-    adc.w #!obj_size
-    tcd
+    clc : tdc : adc.w #obj.ext.len : tcd
     dey
     bne .852A
 
@@ -808,7 +797,7 @@ _0185BB: ;a8 x-
     ldx $0374
     phb
     lda #$7E : pha : plb
-    lda $13D1
+    lda.w !sprite_prio_offset.count+0*2
     beq +
 
     ldy #$0000 : jsr _018673
@@ -824,8 +813,7 @@ _0185BB: ;a8 x-
     lda.w current_cage
     bne .85EF
 
-    lda #$04 : xba : lda #$3C
-    tcd
+    lda #$04 : xba : lda #$3C : tcd ;todo: use label
     jsr _01868B_868E
 .85EF:
     lda $13D5
@@ -854,8 +842,7 @@ _0185BB: ;a8 x-
     lda.w current_cage
     beq .862E
 
-    lda #$04 : xba : lda #$3C
-    tcd
+    lda #$04 : xba : lda #$3C : tcd ;todo: use label
     jsr _01868B_868E
 .862E:
     lda $13DD
@@ -902,10 +889,7 @@ _0185BB: ;a8 x-
 _018673: ;a8 x16
     sta $0378
 .8676:
-    lda $11B2,Y
-    xba
-    lda $11B1,Y
-    tcd
+    lda.w !sprite_prio_offset.queues+1,Y : xba : lda.w !sprite_prio_offset.queues,Y : tcd
     phy
     jsr _01868B_868E
     ply
@@ -924,11 +908,11 @@ _01868B:
 
 .868E: ;a8 x16
     lda $08
-    bit #$10
+    bit #$10 ;todo: flicker bit
     beq +
 
-    lda $02C3
-    and #$01
+    lda.w frame_counter
+    and #$01 ;skip drawing on odd (finished?) frames
     bne .868D
 +:
     phx
@@ -939,7 +923,7 @@ _01868B:
 
     lda #$00
     xba
-    lda $02C3
+    lda.w frame_counter
     and #$1F
     lsr #3
     inc
@@ -977,8 +961,7 @@ _01868B:
     sta $0012
     lda $12
     lsr
-    lda #$0000
-    tcd
+    lda #$0000 : tcd
     bcs .8777
 
 .8716:
@@ -1613,51 +1596,44 @@ _018CE2: ;a- x-
 
     !X16
     ldx #$0100
--:
+.8CE7:
     stz $1A99,X
-    dex
-    bne -
+    dex : bne .8CE7
 
-    ldx #$0D74
--:
-    stz.w !obj_start,X
-    dex
-    bpl -
+    ldx.w #obj[53].base-1
+.8CF0:
+    stz.w !obj_start,X ;zero out object array
+    dex : bpl .8CF0
 
     !A16
     !X8
     ldx #$12 : stx.w open_weapon_slots
     lda.w #!obj_weapons.base
--:
+.8D02:
     sta.w slot_list_weapons,X
     clc
-    adc.w #!obj_size
-    dex #2
-    bpl -
+    adc.w #obj.ext.len
+    dex #2 : bpl .8D02
 
     ldx #$3C : stx.w open_object_slots
     lda.w #!obj_objects.base
--:
+.8D15:
     sta.w slot_list_objects,X
     clc
-    adc.w #!obj_size
-    dex #2
-    bpl -
+    adc.w #obj.ext.len
+    dex #2 : bpl .8D15
 
     !A8
     !X16
-    lda #$1F : sta $0000
+    lda.b #31 : sta $0000 ;obj_objects slot count
     ldx #$079E
--:
-    lda $0000 : sta $094F,X
+.8D2C:
+    lda $0000 : sta.w !obj_objects.ext.index,X
     dec $0000
     !A16
-    txa
-    sec
-    sbc.w #!obj_size
-    tax
+    txa : sec : sbc.w #obj.ext.len : tax
     !A8
-    bpl -
+    bpl .8D2C
 
     !AX8
     lda #$08 : sta.w open_magic_slots
@@ -2220,13 +2196,13 @@ _01918E:
     and #$0001
     bne .91A3
 
-    clc : lda.w !obj_arthur.pos_x+1 : adc.w _01A7E6+0,X : sta $0004
+    clc : lda.w !obj_arthur.pos_x+1 : adc.w _00A7E6+0,X : sta $0004
     bra .91AD
 
 .91A3:
-    sec : lda.w !obj_arthur.pos_x+1 : sbc.w _01A7E6+0,X : sta $0004
+    sec : lda.w !obj_arthur.pos_x+1 : sbc.w _00A7E6+0,X : sta $0004
 .91AD:
-    clc : lda.w !obj_arthur.pos_y+1 : adc.w _01A7E6+2,X : sta $0006
+    clc : lda.w !obj_arthur.pos_y+1 : adc.w _00A7E6+2,X : sta $0006
     bra .91CA
 
 .set_direction16: ;a- x-
@@ -2563,10 +2539,7 @@ _0193D7:
     rtl
 .93E0:
     phd
-    lda #$00
-    xba
-    lda #$00
-    tcd
+    lda #$00 : xba : lda #$00 : tcd
 .93E7:
     ldy #$07
 .93E9:
@@ -2649,10 +2622,7 @@ _019485:
     sta $0002
     stz $0003
     phd
-    lda #$00
-    xba
-    lda #$00
-    tcd
+    lda #$00 : xba : lda #$00 : tcd
     !A16
     ldy #$00
     lda ($00),Y : sta $037C,X
@@ -2672,8 +2642,7 @@ _019485:
 { ;94CF - 951D
 _0194CF: ;a8 x-
     phd
-    lda #$00 : xba : lda #$00
-    tcd
+    lda #$00 : xba : lda #$00 : tcd
     !A8
     !X16
     ldx #$0000
@@ -2958,7 +2927,7 @@ _019697: ;a8 x8
     !A16
     tya
     clc
-    adc.w #!obj_size
+    adc.w #obj.ext.len
     tay
     !A8
     pla
@@ -2983,7 +2952,7 @@ _019697: ;a8 x8
     !A16
     tya
     clc
-    adc.w #!obj_size
+    adc.w #obj.ext.len
     tay
     !A8
     dex
@@ -2997,8 +2966,7 @@ _019697: ;a8 x8
 { ;96EF - 9734
 _0196EF: ;a8 x8
     phd
-    lda #$00 : xba : lda #$00
-    tcd
+    lda #$00 : xba : lda #$00 : tcd
     jsl call_rng
     pha
     txy
@@ -3029,384 +2997,15 @@ _0196EF: ;a8 x8
     rtl
 }
 
+{
 if !version == 2
-{ ;9735 - 975F
-_019735_eu:
-    lda #$81 : pha : plb
-    ldy #$06
-.973B:
-    lda.w .9752,Y
-    phy
-    jsl _01A8CD
-    ply
-    lda.w .9759,Y : jsl _01A717_A728
-    dey : bpl .973B
-
-    jml _01A717
-
-.9752: db $00,$01,$02,$03,$02,$01,$00
-.9759: db $01,$05,$02,$04,$02,$05,$01
-}
+    incsrc "task_fns/_019735_eu.asm" ;9735 - 975F
 endif
-
-{ ;9735 - 9756
-_019735: ;a8 x8
-    stz $02F2
-    lda $0055,Y
-    lsr
-    bne .973F
-
-    inc
-.973F:
-    sta $0055,Y
-.9742:
-    lda $0055,Y : jsl _01A717_A728
-    inc $02F2
-    lda $02F2
-    cmp #$0F
-    bne .9742
-
-    jml _01A717
-}
-
-{ ;9757 - 9775
-_019757: ;a8 x8
-    lda #$0F : sta $02F2
-    lda $0055,Y
-    lsr
-    bne .9763
-
-    inc
-.9763:
-    sta $0055,Y
-.9766:
-    lda $0055,Y : jsl _01A717_A728
-    dec $02F2
-    bne .9766
-
-    jml _01A717
-}
-
-{ ;9776 - 97D0
-_019776: ;a8 x8
-    jsr .97AB
-
-.9779:
-    ldx #$1F
-    jsr .97C3
-    lda #$01 : jsl _01A717_A728
-    jsl _018360
-
-    ldx #$1F
--:
-    jsr .97C3
-    dex : bpl -
-
-    bra .97A4
-
-.9792:
-    jsr .97B0
-    bra .9779
-
-.9797: ;a8 x8
-    jsr .97AB
-    ldx #$00
--:
-    jsr .97C3
-    inx
-    cpx #$20
-    bne -
-
-.97A4:
-    stz $02E8
-    jml _01A717
-
-.97AB:
-    lda #$9F : sta $02EC
-
-.97B0:
-    stz $02EB
-    lda #$80 : sta $02E8
-    lda $0055,Y
-    lsr
-    bne +
-
-    inc
-+:
-    sta $0055,Y
-    rts
-
-;-----
-
-.97C3:
-    txa
-    ora #$E0
-    sta $02EE
-    lda $0055,Y : jsl _01A717_A728
-    rts
-}
-
-{ ;97D1 - 9A83
-_0197D1: ;a8 x8
-    phd
-    lda #$60 : jsl _01A717_A728 ;wait 96 frames before continuing
-    jsr .985F
-    !AX16
-    lda $007B
-    asl #3
-    and #$00FF
-    tay
-    ldx.w _00ABA8+0,Y
-    lda.w _00ABA8+2,Y : sta $7EF700,X
-    ldx.w _00ABA8+4,Y
-    lda.w _00ABA8+6,Y : sta $7EF700,X
-    lda #$15A2
-    tcd
-    ldx #$0900
-    lda $007B
-    and #$0003
-    beq .980D
-
-    ldx #$0B00
-.980D:
-    txa
-    ldy #$0040
-    ldx #$001E
-    jsl _01C045_far
-    !AX8
-    lda #$0C : sta $1A77
-.981F:
-    ldy #$00 : jsl _01C386
-    ldx #$1E : jsl _01C336
-    ldy #$00 : jsl _01C386
-    ldx #$1E : jsl _01C336
-    lda #$01 : jsl _01A717_A728
-    dec $1A77
-    bne .981F
-
-    lda $15DE
-    pha
-    and #$03
-    clc
-    adc #$06
-    sta $031E
-if !version == 2
-    lda #$01 : jsl _01A717_A728
-endif
-    pla
-    inc
-    and #$03
-    clc
-    adc #$06
-    sta $031F
-    !AX8
-    pld
-    jml _01A717
-
-;-----
-
-.985F:
-    ldx $007B
-    lda.w _00AACA,X : sta $0000
-    beq .98A3
-
-    lda.w _00AACA_offset,X : sta $0001
-    stz $0002
-.9873:
-    jsl get_object_slot
-    bmi .989C
-
-    lda #$0C : sta.w obj.active,X
-    lda #!id_shell : sta.w obj.type,X
-    !A16
-    ldy $0001
-    lda.w _00AACA_pos-3,Y : sta.w obj.pos_x+1,X
-    lda.w _00AACA_pos-1,Y : sta.w obj.pos_y+1,X
-    tya
-    clc
-    adc #$0004
-    sta $0001
-.989C:
-    !A8
-    dec $0000
-    bne .9873
-
-.98A3:
-    rts
-}
-
-{ ;98A4 - 9A51
-_0198A4: ;a- x8
-    ;rising wave
-    !A8
-    ldy #$30 : lda.b #_01FF00_34 : jsl _01A6FE
-    lda #$11 : sta $02D5 : sta $02D7
-    lda #$01 : jsr _019A88
-    jsr .9987
-    lda #$61 : sta $02D9
-    !A16
-    lda #$0272 : sta $19DE
-    lda #$0272 : sta $19E2
-    lda #$0124 : sta $19E0
-    lda #$0124 : sta $19E4
-    stz $19A5
-    stz $19A9
-    stz $19AD
-    stz $19B1
-    !A8
-    jsl _01B90E
-    lda #$08 : sta $02DD
-    stz $74
-    lda #$0C : sta $02DE
-    lda #$04 : sta $031E
-if !version == 2
-    lda #$01 : jsl _01A717_A728
-endif
-    lda #$4F : sta.w hud_flicker_timer
-    !A16
-    lda #$F200 : sta $6D
-    lda #$FFFF : sta $6F
-    lda #$0050 : sta $79
-    stz $71
-    stz $73
-    stz $75
-    !A8
-    lda #$15 : sta $02D5 : sta $02D7
-    ldx #$00 : lda #$02 : jsl _01F6C9
-    lda #!sfx_wave_rise : jsl _018049_8053
-.9934:
-    lda #$01 : jsr _019A88
-    jsr .9992
-    jsr .9A05
-    lda $73
-    cmp #$FE
-    bne .9934
-
-if !version == 2
-    lda #$11 : sta $02D7
-.9981:
-    lda #$01 : jsr _019A88
-    lda $007E
-    bne .9981
-endif
-    !A16
-    stz $19DE
-    stz $19E2
-    stz $19E0
-    stz $19E4
-    !A8
-    jsl _01B90E
-if !version == 0 || !version == 1
-    lda #$17 : sta $02D5 : sta $02D7
-endif
-    lda #$01 : sta $02D9
-    lda #$11 : sta $02DD
-    lda #$19 : sta $02DE
-    ldx #$00 : lda #$04 : jsl _01F6C9
-    stz $1554
-    !AX8
-if !version == 2
-    lda #$03 : jsr _019A88
-    lda #$17 : sta $02D5 : sta $02D7
-endif
-    lda #$01 : jsr _019A88
-    pld
-    jml _01A717
-
-;-----
-
-.9987:
-    lda #$01 : jsr _019A88
-    lda $031E
-    bne .9987
-
-    rts
-
-;-----
-
-.9992:
-    !A16
-    clc
-    lda $6D : adc $79 : sta $6D
-    lda $6F : adc #$0000 : sta $6F
-    sec
-    lda $71 : sbc $6D : sta $71
-    lda $73 : sbc $6F : sta $73
-    lda $72
-    cmp #$0200
-    bcc .99B9
-
-    lda #$0000
-.99B9:
-    sta $19B1
-    !A8
-    lda $75
-    beq .99DA
-
-    !A16
-    clc
-    lda $72 : adc #$0080 : sta $77
-    cmp #$0200
-    bcc .99D4
-
-    lda #$0000
-.99D4:
-    sta $19A9
-    !A8
-    rts
-
-.99DA:
-    lda $6F
-    bmi .9A04
-
-    inc $75
-    lda #$03 : sta $031E
-if !version == 2
-    lda #$01 : jsl _01A717_A728
-endif
-    lda #$17 : sta $02D5 : sta $02D7
-    ldx #$54 : lda #$01 : jsl _01F6C9
-    lda #$10 : jsr _019A88
-    lda #$28 : sta $79
-    lda #!sfx_wave_crash : jsl _018049_8053
-.9A04:
-    rts
-
-;-----
-
-.9A05:
-    lda.w hit_by_water_crash
-    bne .9A51
-
-    lda $6F
-    bmi .9A51
-
-    lda.w is_on_stone_pillar
-    bne .9A51
-
-    !A16
-    clc
-    lda $72
-    adc.w !obj_arthur.pos_y+1
-    sec
-    sbc #$00E8
-    clc
-    adc #$0040
-    cmp #$0080
-    !A8
-    bcs .9A51
-
-    lda $14D1
-    bne .9A51
-
-    lda.b #_01DC56    : sta.w !obj_arthur.state+1
-    lda.b #_01DC56>>8 : sta.w !obj_arthur.state+2
-    lda.w !obj_arthur.flags1 : ora #$80 : sta.w !obj_arthur.flags1
-    lda $0276 : ora #$02 : sta $0276
-    lda #$FF : sta.w !obj_arthur.hp
-    inc $14D1
-.9A51:
-    rts
+    incsrc "task_fns/_019735.asm" ;9735 - 9756
+    incsrc "task_fns/_019757.asm" ;9757 - 9775
+    incsrc "task_fns/_019776.asm" ;9776 - 97D0
+    incsrc "task_fns/_0197D1.asm" ;97D1 - 98A3
+    incsrc "task_fns/_0198A4.asm" ;98A4 - 9A51
 }
 
 { ;9A52 - 9A87
@@ -3439,260 +3038,14 @@ water_crash_to_ram: ;a- x-
 _019A88: ;a8 x8
     pha
     jsl _01B26D
-    pla
-    jsl _01A717_A728
+    pla : jsl current_task_suspend
     rts
 }
 
-{ ;9A93 - 9C0B
-_019A93: ;a8 x8
-    ldx $0055,Y
-    lda.w boat_AB62+12,X : sta $0063,Y
-    stz $1ED7
-    !AX16
-    txa
-    asl
-    tax
-    lda.w boat_AB62+0,X : tcd
-    lda.w boat_AB62+4,X : sta $09 : sta $0B
-    stz $0D
-    !A8
-    stz $16
-    ldy.w boat_AB62+8,X
-    bne .9ADA
-
-.9ABA:
-    lda #$01 : jsl _01A717_A728
-    jsr .9B12
-    lda $006D
-    beq .9ABA
-
-.9AC8:
-    lda #$01 : jsl _01A717_A728
-    lda $16
-    beq .9AC8
-
-    lda #$50 : jsl _01A717_A728
-    bra .9AEB
-
-.9ADA:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$0B00
-    bcc .9ADA
-
-    ;shortly after vortex screen
-    inc $00AC
-.9AEB:
-    stz $08
-.9AED:
-    lda #$01 : jsl _01A717_A728
-    jsr .9B34
-    lda #$01 : jsl _01A717_A728
-    jsr .9BC8
-    lda #$01 : jsl _01A717_A728
-    lda $1ED7
-    beq .9AED
-
-    stz $0D
-    stz $0E
-    jml _01A717
-
-;-----
-
-.9B12:
-    php
-    lda $14D1
-    bne .9B32
-
-    !A16
-    sec
-    lda #$02D0
-    sbc $1EAE
-    cmp.w !obj_arthur.pos_y+1
-    bcs .9B32
-
-    lda.w camera_y+1 : sta $19E8
-    !AX8
-    jsl _02FDCD
-.9B32:
-    plp
-    rts
-
-;-----
-
-.9B34:
-    jsr .9B78
-.9B37:
-    !A16
-    lda #$0001 : jsl _01A717_A728
-    sec
-    lda $1736,Y : sbc $0F : sta $1736,Y
-    lda $1738,Y : sbc $11 : sta $1738,Y
-    jsr .9B94
-    bcc .9B37
-
-.9B56:
-    !A16
-    lda #$0001 : jsl _01A717_A728
-    sec
-    lda $1736,Y : sbc $0F : sta $1736,Y
-    lda $1738,Y : sbc $11 : sta $1738,Y
-    jsr .9BB4
-    bmi .9B56
-
-    !A8
-    rts
-
-;-----
-
-.9B78:
-    ;to use alternate wave strengths in different screens. desyncs fg & bg waves though!
-    ;lda.w camera_x+2
-    ;sec : sbc #$0B
-    ;and #$07
-    ;clc : adc $15
-
-    clc
-    lda $08
-    adc $15
-    and #$0F
-    tax
-    lda.w boat_AB70,X
-    tax
-    stz $0F
-    stz $10
-    stz $11
-    stz $12
-    lda.w boat_AB80+3,X : sta $13 ;loads from AB83 (= 8) or AB87 (= 8)
-    stz $14
-    rts
-
-;-----
-
-.9B94:
-    jsr _019CBE
-    sec
-    lda $0F : sbc $13 : sta $0F
-    lda $11 : sbc #$0000 : sta $11
-    sec
-    lda.w boat_AB80+0,X : sbc $0F ;sets carry flag
-    lda.w boat_AB80+2,X : ora #$FF00 : sbc $11 ;binary or turns bottom bits into signed negative number
-    rts
-
-;-----
-
-.9BB4:
-    jsr _019CBE
-    clc
-    lda $0F : adc $13 : sta $0F
-    lda $11 : adc #$0000 : sta $11
-    lda $11
-    rts
-
-;-----
-
-.9BC8:
-    jsr .9B78
-.9BCB:
-    !A16
-    lda #$0001 : jsl _01A717_A728
-    clc
-    lda $1736,Y : adc $0F : sta $1736,Y
-    lda $1738,Y : adc $11 : sta $1738,Y
-    jsr .9B94
-    bcc .9BCB
-
-.9BEA:
-    !A16
-    lda #$0001 : jsl _01A717_A728
-    clc
-    lda $1736,Y : adc $0F : sta $1736,Y
-    lda $1738,Y : adc $11 : sta $1738,Y
-    jsr .9BB4
-    bmi .9BEA
-
-    !A8
-    rts
-}
-
-{ ;9C0C - 9C85
-_019C0C: ;a8 x-
-    !X16
-.9C0E:
-    lda #$01 : jsl _01A717_A728
-    ldx #$02B0
-    cpx.w camera_x+1
-    bcs .9C0E
-
-    stx.w screen_boundary_left
-.9C1F:
-    lda #$01 : jsl _01A717_A728
-    ldx #$0800
-    cpx.w camera_x+1
-    bcs .9C1F
-
-    stx.w screen_boundary_left
-.9C30:
-    lda #$02 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$08D6
-    bcc .9C30
-
-    !X8
-    lda #$00 : sta $0066
-    lda.w checkpoint
-    bne .9C82
-
-    ldy #$18 : lda.b #_01FF00_38 : jsl _01A6FE
-    !AX16
-    ldy #$0030
-.9C57:
-    clc
-    lda $1EAB
-    adc #$0002
-    bmi .9C63
-
-    lda #$0000
-.9C63:
-    sta $1EAB
-    clc
-    lda $1EEE
-    adc #$0002
-    cmp #$0080
-    bcc .9C75
-
-    lda #$0080
-.9C75:
-    sta $1EEE
-    lda #$0001 : jsl _01A717_A728
-    dey
-    bne .9C57
-
-.9C82:
-    jml _01A717
-}
-
-{ ;9C86 - 9CBD
-_019C86: ;a- x-
-    !AX16
-.9C88:
-    lda #$0001 : jsl _01A717_A728
-    sec
-    lda $1EAE : sbc #$0004 : sta $1EAE
-    bpl .9C88
-
-    stz $1EAD
-    stz $1EAE
-    lda #$0001 : jsl _01A717_A728
-.9CA8:
-    sec
-    lda $1EB1 : sbc #$0004 : sta $1EB1
-    bpl .9CA8
-
-    stz $1EB0
-    stz $1EB1
-    jml _01A717
+{
+    incsrc "task_fns/_019A93.asm" ;9A93 - 9C0B
+    incsrc "task_fns/_019C0C.asm" ;9C0C - 9C85
+    incsrc "task_fns/_019C86.asm" ;9C86 - 9CBD
 }
 
 { ;9CBE - 9CDF
@@ -3720,416 +3073,13 @@ _019CBE: ;a16 x-
     rts
 }
 
-{ ;9CE0 - 9DE4
-_019CE0: ;a8 x8
-    stz $006D
-    lda #$FF : jsl _01A717_A728
-.9CE9:
-    lda #$A0 : sta $006E
-.9CEE:
-    ldx #$00 : ldy #$00 : jsr .9D8A
-    jsr .9D1F
-    lda #$01 : jsl _01A717_A728
-    dec $006E
-    bne .9CEE
-
-    lda #$A0 : sta $006E
-.9D08:
-    ldx #$00 : ldy #$03 : jsr .9D8A
-    jsr .9D1F
-    lda #$01 : jsl _01A717_A728
-    dec $006E
-    bne .9D08
-
-    bra .9CE9
-
-;-----
-
-.9D1F:
-    ldx #$00 : ldy #$00 : jsr .9DA7
-    bcc .9D31
-
-    ldx #$01 : ldy #$08 : jsr .9DA7
-    bcs .9D89
-
-.9D31:
-    phx
-    lda #!sfx_ship_creak : jsl _018049_8053
-    stz $1A84
-    lda #$02 : sta $1A80
-    plx
-    inc $1EE6,X
-    lda.w _00AAD8,X
-    tax
-.9D48: ;raise water level
-    clc
-    lda $1EAD : adc #$90 : sta $1EAD
-    lda $1EAE : adc #$00 : sta $1EAE
-    lda $1EAF : adc #$00 : sta $1EAF
-    clc
-    lda $1EB0 : adc #$50 : sta $1EB0
-    lda $1EB1 : adc #$00 : sta $1EB1
-    lda $1EB2 : adc #$00 : sta $1EB2
-    lda #$01 : jsl _01A717_A728
-    dex
-    bne .9D48
-
-    lda #$01 : jsl _01A717_A728
-.9D89:
-    rts
-
-;-----
-
-.9D8A:
-    clc
-    lda $1EAA,X : adc.w boat_rocking_speed+0,Y : sta $1EAA,X
-    lda $1EAB,X : adc.w boat_rocking_speed+1,Y : sta $1EAB,X
-    lda $1EAC,X : adc.w boat_rocking_speed+2,Y : sta $1EAC,X
-    rts
-
-;-----
-
-.9DA7:
-    lda $1EE6,X
-    bne .9DE3
-
-    !A16
-    lda.w boat_AB46+4,Y : sta $0000
-    asl                 : sta $0002
-    lda.w boat_AB46+6,Y : sta $0004
-    asl                 : sta $0006
-    sec
-    lda.w !obj_arthur.pos_x+1
-    sbc.w boat_AB46+0,Y
-    clc
-    adc $0000
-    cmp $0002
-    bcs .9DE0
-
-    sec
-    lda.w !obj_arthur.pos_y+1
-    sbc.w boat_AB46+2,Y
-    clc
-    adc $0004
-    cmp $0006
-.9DE0:
-    !A8
-    rts
-
-.9DE3:
-    sec
-    rts
-}
-
-{ ;9DE5 - 9E1A
-_019DE5: ;a8 x?
-    lda #$3F : jsl _01A717_A728
-.9DEB:
-    lda #$40 : sta $0086
-.9DF0:
-    ldx #$06 : ldy #$06 : jsr _019CE0_9D8A
-    lda #$01 : jsl _01A717_A728
-    dec $0086
-    bne .9DF0
-
-    lda #$40 : sta $0086
-.9E07:
-    ldx #$06 : ldy #$09 : jsr _019CE0_9D8A
-    lda #$01 : jsl _01A717_A728
-    dec $0086
-    bne .9E07
-
-    bra .9DEB
-}
-
-{ ;9E1B - 9EE9
-_019E1B: ;a8 x?
-    stz $CD
-    lda #$01 : sta $CE
-    jsl _018049_8051
-.9E25:
-    lda #$01 : jsl _01A717_A728
-    jsl get_object_slot
-    bmi .9E25
-
-    lda #$0C : sta.w obj.active,X
-    lda #!id_waterfall_end : sta.w obj.type,X
-    !A16
-    lda #$15B0 : sta.w obj.pos_x+1,X
-    lda #$0228 : sta.w obj.pos_y+1,X
-    !AX8
-    lda #$01 : jsl _01A717_A728
-    ldx #$0F
-    lda #$00
-.9E55:
-    sta $7F9800,X
-    dex
-    bpl .9E55
-
-    !A16
-    sec
-    lda #$1490
-    sbc.w camera_x+1
-    !A8
-    sta $7F9801
-    clc
-    adc #$40
-    sta $7F9802
-    lda #$01 : sta $7F9803 : sta $7F9806 : sta $7F9809
-    lda #$02 : sta $02E6
-    lda #$01 : sta !DMAP5
-    lda #$26 : sta !BBAD5
-    lda #$00 : sta !A1T5L
-    lda #$98 : sta !A1T5H
-    lda #$7F : sta !A1B5
-    stz !DAS5B
-    lda #$20 : ora $02F0 : sta $02F0
-.9EA9:
-    lda #$01 : jsl _01A717_A728
-    lda $CE
-    cmp #$57
-    bcc .9ECD
-
-    sbc #$56
-    sta $7F9803
-    lda $7F9801 : sta $7F9804
-    lda $7F9802 : sta $7F9805
-    bra .9ED1
-
-.9ECD:
-    sta $7F9800
-.9ED1:
-    !A16
-    clc : lda $CD : adc #$00F0 : sta $CD
-    !A8
-    lda $CE
-    cmp #$C8
-    bcc .9EA9
-
-    inc $1F9F
-    jml _01A717
-}
-
-{ ;9EEA - 9F42
-_019EEA: ;a- x8
-    ;stage 3 handler?
-    !A16
-    lda.w camera_x+1 : sta $B5
-    stz $B7
-.9EF3:
-    !A16
-    lda #$0001 : jsl _01A717_A728
-    ldy #$00
-    sec
-    lda.w camera_x+1
-    sbc $B5
-    bpl .9F0C
-
-    iny #2
-    eor #$FFFF
-    inc
-.9F0C:
-    cmp #$0008
-    bcc .9EF3
-
-    lda $B5 : adc.w stage3_data_AB3E,Y : sta $B5
-    !A8
-    tya
-    lsr
-    and #$01
-    sta $1F9A
-    lda $1F9B
-    beq .9EF3
-
-    clc
-    lda $B7
-    adc.w stage3_data_AB42,Y
-    bpl .9F32
-
-    lda #$0D
-    bra .9F38
-
-.9F32:
-    cmp #$0E
-    bcc .9F38
-
-    lda #$00
-.9F38:
-    sta $B7
-    inc
-    sta $031C
-    inc $1F99
-    bra .9EF3
-}
-
-{ ;9F43 - A009
-_019F43: ;a8 x8
-    lda #$00
-    xba
-    clc
-    tya
-    adc #$4E
-    tcd
-    ldx $07
-    stz $02E2
-    lda #$FF : sta $02E3
-    !A16
-.9F57:
-    lda.w stage3_data_AAE4,X : sta $0B
-.9F5C:
-    lda #$0100 : sta $19C5
-    lda #$0001 : sta $031D
-.9F68:
-    lda #$0001 : jsl _01A717_A728
-    stz $031D
-    lda.w camera_x+1
-    cmp.w stage3_data_AB0C,X
-    bcc .9F84
-
-    lda.w stage3_data_AADA,X
-    tax
-    bpl .9F57
-
-    jml _01A717
-
-.9F84:
-    sec
-    lda.w camera_x+1
-    sbc.w stage3_data_AB20,X
-    adc.w stage3_data_AB02,X
-    cmp.w stage3_data_AAF8,X
-    bcs .9F68
-
-    stz $1F9B
-    sec
-    lda.w camera_x+1
-    sbc.w stage3_data_AAEE,X
-    cmp.w stage3_data_AAF8,X
-    bcs .9F5C
-
-    cmp #$0100
-    bcc .9FB4
-
-    cmp.w stage3_data_AB16,X
-    bcs .9FB4
-
-    inc $1F9B
-    lda.w camera_x+1 : sta $0B
-.9FB4:
-    sec : lda.w camera_x+1 : sbc $0B : sta $19C5
-    clc : lda $0B : adc #$0028 : sta $0000
-    sec
-    sbc.w stage3_data_AB2A,X
-    cmp.w stage3_data_AB34,X
-    bcs .9FDB
-
-    sec
-    lda $0000
-    sbc.w camera_x+1
-    cmp #$0100
-    bcc .9FDE
-
-.9FDB:
-    lda #$0000
-.9FDE:
-    tay
-    sty $02E2
-    clc : lda $0B : adc #$00D8 : sta $0000
-    sec
-    sbc.w stage3_data_AB2A,X
-    cmp.w stage3_data_AB34,X
-    bcs .A000
-
-    sec
-    lda $0000
-    sbc.w camera_x+1
-    cmp #$0100
-    bcc .A003
-
-.A000:
-    lda #$FFFF
-.A003:
-    tay
-    sty $02E3
-    jmp .9F68
-}
-
-{ ;A00A - A0A0
-_01A00A:
-    ;4b handler?
-    !A16
-    !A8
-    stz $0088
-    stz $008A
-    lda #$01 : sta $0089
-    lda #$01 : sta $1F2F
-.A01E:
-    lda #$BD : jsl _01A717_A728
-    lda #$04
-    bra .A02A
-
-.A028:
-    lda #$08
-.A02A:
-    jsr .A067
-    lda #$08 : jsr .A084
-    lda $0088
-    bne .A047
-
-    !A16
-    lda.w !obj_arthur.pos_x+1
-    cmp #$0190
-    !A8
-    bcs .A028
-
-    lda #$01
-    bra .A04C
-
-.A047:
-    cmp $008A
-    beq .A028
-
-.A04C:
-    sta $008A
-    lda #$04 : jsr .A067
-.A054:
-    lda #$01 : jsl _01A717_A728
-    lda $0087
-    cmp $0089
-    beq .A054
-
-    sta $0089
-    bra .A01E
-
-;-----
-
-.A067:
-    sta $85
-.A069:
-    lda #$06 : jsl _01A717_A728
-    dec $1F2B
-    dec $1F2D
-    jsl _01B9A8_BA9C
-    dec $85
-    bne .A069
-
-    lda #$0F : jsl _01A717_A728
-    rts
-
-;-----
-
-.A084:
-    sta $85
-.A086:
-    lda #$06 : jsl _01A717_A728
-    inc $1F2B
-    inc $1F2D
-    jsl _01B9A8_BA9C
-    dec $85
-    bne .A086
-
-    lda #$0F : jsl _01A717_A728
-    rts
+{
+    incsrc "task_fns/_019CE0.asm" ;9CE0 - 9DE4
+    incsrc "task_fns/_019DE5.asm" ;9DE5 - 9E1A
+    incsrc "task_fns/_019E1B.asm" ;9E1B - 9EE9
+    incsrc "task_fns/_019EEA.asm" ;9EEA - 9F42
+    incsrc "task_fns/_019F43.asm" ;9F43 - A009
+    incsrc "task_fns/_01A00A.asm" ;A00A - A0A0
 }
 
 { ;A0A1 - A0B1
@@ -4139,168 +3089,16 @@ _01A00A:
     beq .A0B1
 
     sta $0089,X
-    tya : jsl _01A717_A728
+    tya : jsl current_task_suspend
 .A0B1:
     rts
 }
 
-{ ;A0B2 - A127
-_01A0B2:
-    ;stage 5 handler
-    !X16
-    lda.w checkpoint
-    beq .A0C6
-
-    ldx #$0580 : stx $19E8
-    stz $1A7F
-    jml _01A717
-
-.A0C6:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_y+1
-    cpx #$0500
-    bcs .A0C6
-
-    inc $19EB
-    ldx #$0500 : stx $19E8
-.A0DD:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$0180
-    bcc .A0DD
-
-    stz $1A7F
-.A0EE:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$0700
-    bcc .A0EE
-
-    ;stage 5-2
-    lda #$05 : sta $19E9
-    stz $19EB
-    lda #$60 : sta $1EF0
-    lda #$C0 : sta $1EF2
-.A10E:
-    lda #$01 : jsl _01A717_A728
-    dec $1EF0
-    lda $1EF0
-    pha
-    asl
-    sta $1EF2
-    pla
-    cmp #$10
-    bne .A10E
-
-    jml _01A717
-}
-
-{ ;A128 - A190
-_01A128:
-    ;stage 5 handler
-    lda.w camera_x+2
-    bne .A155
-
-    !A16
-.A12F:
-    lda #$0001 : jsl _01A717_A728
-    lda.w camera_x+1
-    cmp #$0400
-    bcc .A12F
-
-    !AX8
-    ldy #$3F
-    ldx $02D7
-.A145:
-    txa
-    eor #$02
-    tax
-    sta $02D7
-    lda #$01 : jsl _01A717_A728
-    dey
-    bne .A145
-
-.A155:
-    lda #$15 : sta $02D5 : sta $02D6 : sta $02D7 : sta $02D8
-    lda #$FF : sta $19DF : sta $19E3
-    lda #$94 : sta $031E
-    lda #$01 : jsl _01A717_A728
-    lda #$13 : sta $031E
-    lda $02DD : and #$FC : ora #$01 : sta $02DD
-    lda $02D9 : ora #$20 : sta $02D9
-    jml _01A717
-}
-
-{ ;A191 - A1F4
-_01A191: ;a8 x-
-    !X16
-.A193:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$0220
-    bcc .A193
-
-    stz $1A7F
-.A1A4:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$0400
-    bcc .A1A4
-
-    !A16
-    lda #$0500 : sta $19E8
-    clc
-    txa
-    adc #$0100
-    sta $1A7B
-    !A8
-.A1C4:
-    lda #$01 : jsl _01A717_A728
-    ldx.w camera_x+1
-    cpx #$1800
-    bcc .A1C4
-
-    ldx.w camera_y+1
-    cpx #$0201
-    bcc .A1C4
-
-    lda #$01 : sta $19EB
-.A1DF:
-    lda #$01 : jsl _01A717_A728
-    dex
-    stx.w camera_y+1
-    stx $19E8
-    cpx #$0200
-    bne .A1DF
-
-    jml _01A717
-}
-
-{ ;A1F5 - A21C
-_01A1F5:
-    ;4b handler?
-    lda #$00
-    xba
-    clc
-    tya
-    adc #$4E
-    tcd
-    !X16
-    ldx.w camera_y+1
-    stx $07
-.A204:
-    lda #$01 : jsl _01A717_A728
-    lda.w jump_counter
-    bne .A21B
-
-    ldx.w camera_y+1
-    cpx $07
-    bcs .A21B
-
-    stx $07
-    stx $19E8
-.A21B:
-    bra .A204
+{
+    incsrc "task_fns/_01A0B2.asm" ;A0B2 - A127
+    incsrc "task_fns/_01A128.asm" ;A128 - A190
+    incsrc "task_fns/_01A191.asm" ;A191 - A1F4
+    incsrc "task_fns/_01A1F5.asm" ;A1F5 - A21C
 }
 
 { ;A21D - A242
@@ -4344,8 +3142,7 @@ _01A21D: ;a- x-
     ; $4A.w: count, rounded up to nearest mod 8 value
 
 decompress_graphics_offsets: ;a16 x16
-    lda #$0000
-    tcd
+    lda #$0000 : tcd
     ldx.w gfx_decomp_offsets+0,Y
     stz $46
     lda.w gfx_decomp_offsets+4,Y : sta $48
@@ -4430,8 +3227,7 @@ _01A33C: ;a8 x8
     ldx.w stage
     ldy.w _00AFFD,X
     !AX16
-    lda #$0000
-    tcd
+    lda #$0000 : tcd
     lda.w _00AFFD,Y   : and #$00FF : sta $10
     lda.w _00AFFD+1,Y : sta $12
 .A357:
@@ -4472,48 +3268,7 @@ _01A33C: ;a8 x8
 }
 
 { ;A397 - A3EC
-_01A397: ;a- x8
-    phd
-    phb
-    php
-    ldy $00E5
-    !AX16
-    lda #$0000 : tcd
-    lda.w _00AFCC+4,Y
-    stz $46
-    sta $48
-    lda.w _00AFCC+5,Y
-    clc
-    adc #$0007
-    and #$FFF8
-    lsr #3
-    sta $4A
-    lda.w _00AFCC+2,Y
-    ldx.w _00AFCC+0,Y
-    ldx.w _00AFCC+0,Y ;repeated instruction
-    jsr decompress_graphics_offsets_A263
-    beq .A3E6
-
-.A3C7:
-    jsr decompress_graphics_function
-    beq .A3E6
-
-    lda.l !SLHV
-    lda.l !OPVCT
-    cmp #$F0
-    bcc .A3C7
-
-    phb
-    lda #$80 : pha : plb
-    lda #$01 : jsl _01A717_A728
-    plb
-    bra .A3C7
-
-.A3E6:
-    plp
-    plb
-    pld
-    jml _01A717
+    incsrc "task_fns/_01A397.asm"
 }
 
 { ;A3ED - A4C8
@@ -4562,17 +3317,14 @@ _01A3ED:
     !A8
     sta $0010
     stz $0011
-    asl $0010
-    rol $0011
-    asl $0010
-    rol $0011
+    asl $0010 : rol $0011
+    asl $0010 : rol $0011
     lda $0000
     and #$F0
     lsr #3
     ora $0010
     sta $0010
-    lda $0003
-    sta $0007
+    lda $0003 : sta $0007
     lda $0001
     asl #2
     and #$0C
@@ -4957,19 +3709,16 @@ _01A649: ;a8 x8
 { ;A6AB - A6FD
 _01A6AB: ;a8 x8
     stz $02B6
-    lda #$07 : sta $02B5
-    ldy #$00
+    lda.b #7 : sta.w task_loop_count
+    ldy.b #$00
 .A6B5:
-    ldx $004E,Y
+    ldx.w !task_offset.state,Y
     cpx #$04
     bcs .A6C9
 
 .A6BC:
-    clc
-    tya
-    adc #$18
-    tay
-    dec $02B5
+    clc : tya : adc.b #task.len : tay
+    dec.w task_loop_count
     bne .A6B5
 
     jmp _01A6AB
@@ -4978,25 +3727,23 @@ _01A6AB: ;a8 x8
     lda $02B6
     bne _01A6AB
 
-    sty $02B4
+    sty.w current_task_offset
     tya
-    bne +
+    bne .A6DA
 
-    inc $02C3
-    jsl call_rng ;update rng every work frame
+    inc.w frame_counter
     jsr _01A74A_A7A4
-+:
-    lda #$08 : sta $004E,Y
+.A6DA:
+    lda #$08 : sta.w !task_offset.state,Y
     !A16
-    lda $0050,Y : tcs
-    lda #$0000
-    tcd
+    lda.w !task_offset.stack_reg,Y : tcs
+    lda #$0000 : tcd
     !A8
     cpx #$0C
     bne +
 
-    lda $0054,Y : sta $003F
-    jmp ($003F) ;$0040 = $FF from _01FF00
+    lda.w !task_offset.fn_id,Y : sta.w task_function_pointer
+    jmp.w (task_function_pointer)
 
 +:
     plp
@@ -5009,48 +3756,48 @@ _01A6AB: ;a8 x8
 
 { ;A6FE - A716
 _01A6FE: ;a- x-
-    ;"install handler" function?
+    ;"install task" function?
     php
     !AX8
-    sta $0054,Y ;sets 3F later
-    lda #$0C : sta $004E,Y
-    txa      : sta $0055,Y
+    sta.w !task_offset.fn_id,Y
+    lda #$0C : sta.w !task_offset.state,Y
+    txa      : sta.w !task_offset.init_param,Y
     !A16
-    lda $0052,Y : sta $0050,Y
+    lda.w !task_offset.stack_id,Y : sta.w !task_offset.stack_reg,Y
     plp
     rtl
 }
 
 { ;A717 - A749
-_01A717: ;a8 x8
-    !AX8
-    ldy $02B4
-    jsr .A744
+current_task:
 
+.remove: ;a- x-
+    !AX8
+    ldy.w current_task_offset
+    jsr .clear_state
 .A71F:
-    lda #$02 : xba : lda #$75
-    tcs
+    lda.b #stack[7].top>>8 : xba : lda.b #stack[7].top : tcs
     jmp _01A6AB_A6BC
 
-.A728: ;a8 x8
+.suspend: ;a- x-
+    ;suspend task for A frames
     phb
     phd
     phx
     phy
     php
     !AX8
-    ldy $02B4
-    sta $004F,Y
-    lda #$01 : sta $004E,Y
+    ldy.w current_task_offset
+    sta.w !task_offset.timer,Y
+    lda #$01 : sta.w !task_offset.state,Y
     tsc
     !A16
-    sta $0050,Y
+    sta.w !task_offset.stack_reg,Y
     !A8
     bra .A71F
 
-.A744:
-    lda #$00
-    sta $004E,Y
+.clear_state:
+    lda #$00 : sta.w !task_offset.state,Y
     rts
 }
 
@@ -5247,644 +3994,7 @@ _01A8CD:
 endif
 
 { ;A87C - AF03
-_01A87C: ;a8 x8
-    jsl disable_nmi
-    jsl _01834C
-    jsl _018366
-    lda #$0F : sta $02F2
-    jsl _018074
-if !version == 0 || !version == 1
-    ldy #$AF : jsl _01A21D_decompress_graphics
-    ldx #$A8 : jsl _0180C7_ram_to_vram
-    ldy #$A8 : jsl _01A21D_decompress_graphics
-    ldx #$9A : jsl _0180C7_ram_to_vram
-    lda #$04 : jsl _048E68
-elseif !version == 2
-    ldx #$30 : jsl _0180C7
-    ldx #$9A : jsl _0180C7_ram_to_vram
-    lda #$01 : jsl _048E68
-endif
-    stz $02E1
-    !A16
-    lda #$1800 : sta $0318
-    lda #$0800 : sta $031A
-    !A8
-if !version == 0 || !version == 1
-    lda #$08 : jsl _0183D4_83DB
-    lda #$0B : jsl _0190B9_palette_to_ram
-    ldx #$04 : ldy #$18 : lda.b #_01FF00_1C : jsl _01A6FE
-    jsl enable_nmi
-elseif !version == 2
-    lda #$00 : jsl _01A8CD
-    lda #$8F : sta $02F2
-    jsl enable_nmi
-    lda #$62 : jsl _018049_8053
-    lda #$19 : jsl _01A717_A728
-    ldx #$02 : ldy #$18 : lda.b #_01FF00_1C : jsl _01A6FE
-endif
-.A8DC:
-    lda #$01 : jsl _01A717_A728
-    lda $0066
-    bne .A8DC
-
-if !version == 0 || !version == 1
-    lda #$62 : jsl _018049_8053
-    lda #$3F : sta $0055
-elseif !version == 2
-    lda #$12 : jsl _01A717_A728
-    ldy #$30 : lda.b #_01FF00_74 : jsl _01A6FE
-.A964:
-    lda #$01 : jsl _01A717_A728
-    lda $007E
-    bne .A964
-
-    lda #$2E : sta $0055
-endif
-.A8F2:
-    lda #$01 : jsl _01A717_A728
-    lda.w p1_button_hold+1
-    bit #!start
-    bne .A904
-
-    dec $0055 : bne .A8F2
-
-.A904:
-    ldx #$04 : ldy #$18 : lda.b #_01FF00_20 : jsl _01A6FE
-.A90E:
-    lda #$01 : jsl _01A717_A728
-    lda $0066
-    bne .A90E
-
-if !version == 0 || !version == 1
-    lda #$00 : sta $0278
-elseif !version == 2
-    stz $0278
-endif
-.A91E:
-    lda $0278 : asl : tax
-    jsr (.A928,X)
-    bra .A91E
-
-.A928:
-    dw .AAC1, .ABB3, .AB59, .AC08, _01B19D, .AB61
-    dw .ABA0, .AC16, .AAB4, .AAB0, .A940, .A945
-
-.A940:
-    jsl _03F8A3
-    rts
-
-.A945:
-    lda $0279
-    asl
-    tax
-    jmp (+,X) : +: dw .A955, .A96A, .A9CE, .AA8E
-
-.A955:
-    lda #$80 : sta $0276
-    lda #$01 : sta.w difficulty_base : sta.w difficulty
-    stz.w loop
-    lda #$00 : sta $1FC7
-.A96A:
-    ldx #$01
-    lda $1FC7
-    cmp #$0A
-    bne +
-
-    ldx #$FF
-+:
-    stx $0292
-    lda $1FC7
-    pha
-    clc
-    adc #$03
-    sta $1FC4
-    stz $1FC3
-    lda #$02 : sta $1FB9
-    lda #$01 : sta $1FC6
-    pla
-    asl #2
-    tax
-    lda.w _01B4FE+0,X : sta.w stage
-    lda.w _01B4FE+1,X : sta.w checkpoint
-    !A16
-    lda.w _01B4FE+2,X : sta $1FD4
-    stz $1FD6
-    !A8
-    jsr .ABB3
-if !version == 2
-    ldx #$02 : jsr .AC7D_eu
-endif
-    lda $1FC7
-    cmp #$0B
-    bne +
-
-    lda #!arthur_state_gold : sta.w arthur_state_stored
-    lda #!id_arthur_plume : sta.w upgrade_state_stored
-    lda #!id_shield       : sta.w shield_state_stored
-+:
-    lda #$03 : sta $0278
-    stz $0279
-    rts
-
-;-----
-
-.A9CE:
-    jsl _018049_8051
-    lda #$3F : jsl _01A717_A728
-    ldy $1FC7
-    ldx.w _00B52E_B52E,Y : ldy #$90 : lda.b #_01FF00_68 : jsl _01A6FE
-.A9E6:
-    lda #$01 : jsl _01A717_A728
-    lda $00DE
-    bne .A9E6
-
-    ldy #$AF : jsl _01A21D_decompress_graphics
-    ldy $1FC7 : lda.w _00B52E_B546,Y : sta $02D5
-    lda #$18 : sta $031E
-    lda #$01 : jsl _01A717_A728
-    !AX16
-
-    lda #$1800 : sta $0318
-    lda #$0800 : sta $031A
-    stz $19CD
-    stz $19D1
-    !AX8
-    stz $02F0
-    stz $02E1
-    lda #$03 : jsl _01A717_A728
-    lda #$00
-    xba
-    lda #$45 : jsl _018061_8064
-    ldx $1FC7
-    lda.w _00B52E_B53A,X : jsl _0183D4_83DB
-    lda #$01 : jsl _01A717_A728
-    lda #$84 : sta $02EC
-    ldx #$08 : ldy #$90 : lda.b #_01FF00_6C : jsl _01A6FE
-    !A16
-    ldx #$1C : lda #$0010 : ldy #$00 : jsl _019136_9187
-    !A8
-.AA64:
-    lda #$01 : jsl _01A717_A728
-    lda $00DE
-    bne .AA64
-
-    lda #$7E : jsl _01A717_A728
-    lda.b #_01FF00_0C : ldy #$90 : ldx #$08 : jsl _01A6FE
-.AA7F:
-    lda #$01 : jsl _01A717_A728
-    lda $00DE
-    bne .AA7F
-
-    inc $0279
-    rts
-
-;-----
-
-.AA8E:
-    inc $1FC7
-    lda $1FC7
-    cmp #$0C
-    bne .AAAA
-
-    jsl _01834C
-    jsl _018074
-    lda #$01 : jsl _01A717_A728
-    jml _03F8A3
-
-.AAAA:
-    lda #$01
-    sta $0279
-    rts
-
-.AAB0:
-    stz $0278
-    rts
-
-.AAB4:
-    lda #$02 : sta $0022
-    jsl _049085
-    stz $0278
-    rts
-
-.AAC1:
-    lda $0279 : asl : tax
-    jsr (.AACA,X)
-    rts
-
-.AACA: dw .AAD6, .AADE, .AB0E, .AADE, .AB40, .AB44
-
-;-----
-
-.AAD6:
-    jsl _048C43
-    inc $0279
-    rts
-
-;-----
-
-.AADE:
-    stz.w stage
-    stz.w checkpoint
-    stz $1FB9
-    stz $0276
-    stz.w loop
-    stz $0292
-    stz.w money_bag_count
-    jsl _048EAD
-    stz $1FEF
-    lda.w options.sound : lsr : tax
-    lda.w _00B55A,X : jsl _018049_8053 ;sound related, stop sounds maybe?
-    lda.w options.difficulty : lsr : sta.w difficulty_base
-    rts
-
-;-----
-
-.AB0E: ;gets here when demo is loading
-    lda #$02 : sta $1FB9
-    lda #$01 : sta $1FC6
-    lda $1FC7
-    stz $1FC3
-    sta $1FC4
-    lda $1FC7 : sta.w stage
-    lda #$00  : sta.w checkpoint
-    jsr .ABB3
-if !version == 2
-    ldx #$02 : jsr .AC7D_eu
-endif
-    lda $1FC7 : eor #$01 : sta $1FC7
-    lda #$03  : sta $0278
-    stz $0279
-    rts
-
-;-----
-
-.AB40:
-    stz $0279
-    rts
-
-;-----
-
-.AB44: ;on pressing game start
-    jsl _03F526_F527 ;play cutscene
-
-    stz.w pot.enemy_counter
-    stz.w pot.counter
-    lda #$03 : sta.w pot.weapon_req
-    lda #$0A : sta.w pot.armor_statue_req
-    lda #$20 : sta.w pot.extend_req
-
-    lda #$05 : sta.w continues
-    inc $0278
-    stz $0279
-    stz $1FB9
-    rts
-
-    rts : rts ;dead code
-
-;-----
-
-.AB59:
-    jsl _049310
-    inc $0278
-    rts
-
-;-----
-
-.AB61:
-    dec.w extra_lives
-    bmi .AB70
-
-    lda #$02 : sta $0278
-    jsl _049252
-    rts
-
-.AB70: ;game over
-    jsl _049085 ;show game over text & play music?
-    lda.w continues
-    beq .AB9C
-
-    stz $1FB3
-    stz $1FB4
-    inc $1FB5
-    jsl _049121
-    lda $1FB3
-    beq .AB9C
-
-    jsl _049252
-    lda.w current_weapon_stored : pha
-    jsr .ABB3
-    pla : sta.w current_weapon_stored
-    lda #$02
-.AB9C:
-    sta $0278
-    rts
-
-;-----
-
-.ABA0: ;time over
-    jsl _048FDD
-    dec.w extra_lives
-    bmi .AB70
-
-    lda #$02 : sta $0278
-    jsl _049252
-    rts
-
-;-----
-
-.ABB3: ;after start cutscene is over
-    ldx #$21
-.ABB5:
-    stz $0293,X
-    dex : bpl .ABB5
-
-    lda #!arthur_state_steel : sta.w arthur_state_stored
-    !A16
-    lda #$5F00 : sta $0318
-    lda #$0200 : sta $031A
-    !A8
-    ldx.w options.controls
-if !version == 0 || !version == 1
-    lda.w _00B55C_shot_buttons+0,X : sta.w shot_buttons
-    lda.w _00B55C_shot_buttons+1,X : sta.w shot_buttons+1
-    lda.w _00B55C_jump_buttons+0,X : sta.w jump_buttons
-    lda.w _00B55C_jump_buttons+1,X : sta.w jump_buttons+1
-elseif !version == 2
-    jsr .AC7D_eu
-endif
-    lda.w options.extra_lives : lsr : sta.w extra_lives
-    lda #$02 : sta $029E
-    stz $02C3
-    inc $0278
-    rts
-
-;-----
-
-if !version == 2
-.AC7D_eu:
-    lda.w _00B55C_shot_buttons+0,X : sta.w shot_buttons
-    lda.w _00B55C_shot_buttons+1,X : sta.w shot_buttons+1
-    lda.w _00B55C_jump_buttons+0,X : sta.w jump_buttons
-    lda.w _00B55C_jump_buttons+1,X : sta.w jump_buttons+1
-    rts
-endif
-
-;-----
-
-.AC08: ;load stage (1)?
-    jsr .AC99
-    stz $0277
-    jsl _018360
-    inc $0278
-    rts
-
-;-----
-
-.AC16: ;mosaic transition
-    jsl _0180A6
-    lda #$3F : jsl _01A717_A728
-    ldx #$0F
-.AC22:
-    stx !MOSAIC
-    lda #$01 : jsl _01A717_A728
-    clc
-    txa
-    adc #$10
-    tax
-    and #$F0
-    bne .AC22
-
-    stz !MOSAIC
-    lda $1F9D : sta.w stage
-    jsl _01DCCF
-    jsr .AC99
-    inc $0277
-    lda #$01
-    ldx.w stage
-    bne .AC50
-
-    lda #$00 ;runs during 2-1 fade in
-.AC50:
-    sta.w checkpoint
-    jsl _01DE0B
-    lda $02D5 : and #$0F : sta $02D5 : sta $02D5 ;double stores here for some reason
-    lda $02D7 : and #$0F : sta $02D7 : sta $02D7 ;^
-    inc $0379
-    jsr _01B26D_B271
-    jsr _01B90E_B912
-    jsl _018360
-    lda #$08
-    ldx #$FF
-.AC7E:
-    stx !MOSAIC
-    lda #$04 : jsl _01A717_A728
-    sec
-    txa
-    sbc #$10
-    tax
-    cpx #$FF
-    bne .AC7E
-
-    stz !MOSAIC
-    lda #$04 : sta $0278
-    rts
-
-;-----
-
-.AC99:
-    jsl disable_nmi
-    jsl _01834C
-    !A16
-    lda #$5F00 : sta $0318
-    lda #$0200 : sta $031A
-    !A8
-    lda.w difficulty_base : asl : tax
-    lda.w loop
-    beq .ACBC
-
-    inx
-.ACBC:
-    lda.w _00B552,X
-    ldy $1FB9
-    beq .ACC4
-
-if !version == 2
-    lda #$01
-endif
-.ACC4:
-    sta.w difficulty
-    asl
-    tax
-    lda.w random_values_difficulty_offset+0,X : sta $003D
-    lda.w random_values_difficulty_offset+1,X : sta $003E
-    jsl _058000
-    jsl _0180B9
-    jsl _018CE2
-    jsl _0180A6
-    jsr _01B4DE
-    lda.w current_weapon_stored : sta.w weapon_current
-    and #$1E  : sta.w existing_weapon_type
-    lda.w arthur_state_stored
-    cmp #!arthur_state_transformed
-    bcc +
-
-    lda #!arthur_state_steel
-+:
-    sta.w armor_state
-    sta.w transform_armor_state_stored
-
-    cmp #!arthur_state_gold
-    bne +
-
-    lda #$01 : sta.w can_charge_magic
-    stz $14B3
-+:
-    lda.w shield_state_stored
-    beq .AD21
-
-    sta.w !obj_shield.type
-    lda.w shield_type_stored : sta.w !obj_shield.init_param
-    lda #$0C                 : sta.w !obj_shield.active
-.AD21:
-    lda.w upgrade_state_stored
-    beq +
-
-    sta.w !obj_upgrade.type
-    lda #$0C : sta.w !obj_upgrade.active
-+:
-    lda #$30 : ora $02F1 : sta $02F1
-    !X16
-    ldx #$1000 : jsl _018091
-    jsl _018074
-    !AX8
-    jsl _0190B9_90CB
-    jsl _019539
-    lda.w stage
-    cmp #$02
-    bne +
-
-    lda #$19 : sta $02DE
-+:
-    jsl _018DC0
-    lda.w stage
-    bne +
-
-    lda.w checkpoint
-    beq +
-
-    ldx #$16 : jsl _018DC0_8E0E
-+:
-    ldx.w stage
-    lda.w _00B56C,X : sta $02D9
-    and #$07 : dec  : sta $02DA
-    stz $1F8F
-    stz $1F90
-    cpx #$00
-    beq .AD8C
-
-    dec $1F8F
-    dec $1F90
-.AD8C:
-    lda #$0C : sta.w !obj_arthur.active
-    lda $0292 : and #$01 : eor #$01 : sta $032E
-    jsl _019136
-    jsr _01BE1C
-    jsr _01B526 ;set arthur spawn point and other things
-    jsr _01B4EF_B50E
-    jsr _01BF31
-    jsr _01BEBC
-    jsl _048A6B
-    stz $02D5
-    stz $02D6
-    jsl disable_nmi
-    jsr _01AF04_AF08
-    jsr .AE55
-    jsr _01F66A
-    lda #$00 : jsl _0183D4_83DB
-    lda #$43 : sta $02EC
-    lda #$05 : sta.w timer_minutes
-    lda #$00 : sta.w timer_tens
-    lda #$00 : sta.w timer_seconds
-    stz.w timer_ticks
-    lda #$01 : sta $1F1C
-    lda #$02 : sta $0284
-    inc.w hud_update_score
-    inc.w hud_update_timer
-    inc $036E
-    inc.w hud_update_lives
-    jsr _01B4C5
-    jsl _04F000
-    jsr _01F6D7
-    lda.w stage
-    bne .AE2C
-
-    ldx #$00 : jsl water_crash_to_ram
-    ldx #$02 : jsl water_crash_to_ram
-.AE2C:
-    lda #$31 : sta $02F1
-    jsl enable_nmi
-    lda $02DA
-    bne .ret
-
-    ldx #$1F
-.AE3C:
-    phx
-    jsl _04F003
-    jsr _01F6E9
-    jsr _01B2D6
-    inc $0379
-    lda #$01 : jsl _01A717_A728
-    plx
-    dex : bne .AE3C
-
-.ret:
-    rts
-
-;-----
-
-.AE55:
-    lda #$01 : sta $1F57 : sta $1F5C
-    stz $1F61
-    lda #$03 : sta !DMAP1
-    lda #$11 : sta !BBAD1
-    lda #$57 : sta !A1T1L
-    lda #$1F : sta !A1T1H
-    lda #$00 : sta !A1B1
-    stz !DAS1B
-    lda #$01 : sta $1F62 : sta $1F67
-    stz $1F6C
-    lda #$04 : sta !DMAP3
-    lda #$09 : sta !BBAD3
-    lda #$62 : sta !A1T3L
-    lda #$1F : sta !A1T3H
-    lda #$00 : sta !A1B3
-    stz !DAS3B
-    lda #$01 : sta $1F6D : sta $1F6F
-    stz $1F71
-    lda #$00 : sta !DMAP4
-    lda #$05 : sta !BBAD4
-    lda #$6D : sta !A1T4L
-    lda #$1F : sta !A1T4H
-    lda #$00 : sta !A1B4
-    stz !DAS4B
-    lda #$01 : sta $1F78 : sta $1F7B
-    stz $1F7E
-    lda #$01 : sta !DMAP5
-    lda #$2C : sta !BBAD5
-    lda #$78 : sta !A1T5L
-    lda #$1F : sta !A1T5H
-    lda #$00 : sta !A1B5
-    stz !DAS5B
-    lda #$00
-    ldx $0292
-    bne +
-
-    lda #$3A
-    ora $02F0
-+:
-    sta $02F0
-    jsr _01B26D_B271
-    rts
+    incsrc "task_fns/_01A87C.asm"
 }
 
 { ;AF04 -
@@ -6101,34 +4211,25 @@ _01B14B: ;a8 x8
 
     lda #!sfx_pause : jsl _018049_8053
     lda #$F3 : jsl _018049_8053
-    ldx #$90
+    ldx.b #task[6].base
 .B16A:
-    lda $004E,X
-    pha
-    lda #$02
-    sta $004E,X
-    sec
-    txa
-    sbc #$18
-    tax
+    lda.w !task_offset.state,X : pha
+    lda #$02 : sta.w !task_offset.state,X
+    sec : txa : sbc.b #task.len : tax
     bne .B16A
 
 .B17A:
-    lda #$01 : jsl _01A717_A728
+    lda.b #1 : jsl current_task_suspend
     lda.w p1_button_press+1 ;unpause check
     bit #!start
     beq .B17A
 
     lda #$F4 : jsl _018049_8053
-    ldx #$18
+    ldx.b #task[1].base
 .B18F:
-    pla
-    sta $004E,X
-    clc
-    txa
-    adc #$18
-    tax
-    cpx #$A8
+    pla : sta.w !task_offset.state,X
+    clc : txa : adc.b #task.len : tax
+    cpx.b #task[7].base
     bne .B18F
 
 .ret:
@@ -6142,8 +4243,7 @@ _01B19D: ;a8 x8
     lda.w !obj_arthur.pos_x+2 : sta $14BF
     lda.w !obj_arthur.pos_y+1 : sta $14C1
     lda.w !obj_arthur.pos_y+2 : sta $14C2
-    lda #$00 : xba : lda #$00
-    tcd
+    lda #$00 : xba : lda #$00 : tcd
     jsl _018593
     stz $0330
     stz $14E9
@@ -6159,7 +4259,7 @@ _01B19D: ;a8 x8
     jsr _01B6CB
     jsr _01B86E
     jsr _01C062
-    jsr _01B5AB_B5AF
+    jsr _01B5AB_local
     jsr _01F722
     jsr _01B26D_B271
     jsr _01B46D
@@ -6174,7 +4274,7 @@ _01B19D: ;a8 x8
     jsr _01B658
     jsr _01B96E
     jsl _018F80
-    jsl _0184C3
+    jsl fill_sprite_queue
     jsl _0185BB
     jsr _01B9A8
     jsr _01B4EF
@@ -6184,7 +4284,7 @@ _01B19D: ;a8 x8
     jsr _01B2B1
     ldx #$01
 .B22B:
-    txa : jsl _01A717_A728
+    txa : jsl current_task_suspend
     ldy $037A
     bne .B22B
 
@@ -6292,168 +4392,7 @@ _01B2ED:
 }
 
 { ;B315 - B46C
-_01B315: ;a- x8
-    ;stage 1 handler?
-    !A16
-    lda #$0096 : tcd
-    stz $0B ;$00A1, event counter? not sure what to call it
-    ldx.w checkpoint
-    ldy.w stage1_earthquake_start_offset,X : sty $0B
-.B325:
-    !A8
-    lda #$01 : jsl _01A717_A728
-    !A16
-    lda $0B
-    asl
-    tax
-    lda.w !obj_arthur.pos_x+1
-    cmp.w stage1_earthquake_x_offset,X
-    bcc .B325
-
-    !A8
-    inc.w stage1_earthquake_active
-    lda $0B
-    cmp #$07
-    bne .B350
-
-    !A16
-    lda #$0640 : sta.w screen_boundary_left
-    !A8
-.B350:
-    sec
-    txa
-    sbc #$12
-    cmp #$06
-    bcs .B381
-
-    ;gets here at the water crashes
-    stz.w stage1_earthquake_active
-    lsr
-    sta $007B
-    lda #$1F : jsl _01A717_A728
-    lda #$0C : sta $02DD
-    !A16
-    lda #$0272 : sta $19DE
-    lda #$0272 : sta $19E2
-    stz $19A5
-    stz $19A9
-    jmp .B436
-
-.B381:
-    sec
-    txa
-    sbc #$0C
-    cmp #$04
-    bcs + : +: ;unused branch
-
-    phx
-    lda $0292
-    bne .B395
-
-    lda #$34 : jsl _018049_8053 ;ground shake sfx
-.B395:
-    plx
-    stz $1A84
-    lda #$02 : sta $1A80 ;horizontal screen shake
-    stz $1A8E
-    lda #$04 : sta $1A8A
-    lda #$1F : jsl _01A717_A728
-    txa
-    asl
-    tay
-    ldx.w !obj_arthur.pos_x+2
-    !AX16
-    lda.w stage1_earthquake_tile_offset+0,Y : sta $07
-    lda.w stage1_earthquake_tile_offset+2,Y
-    pha
-    and #$7FFF
-    sta $09
-    pla
-    rol #3
-    and #$0002
-    sta $13 ;this will always be 0 and never 2
-    ldy #$0000
-    lda [$07],Y : and #$00FF : sta $0D
-    iny
-.B3D6:
-    lda [$07],Y : and #$00FF : sta $0F
-    iny
-.B3DE:
-    lda [$07],Y : and #$00FF : sta $11
-    iny
-    lda [$07],Y
-    ldx $13
-    clc
-    adc.w stage1_earthquake_B62F,X
-    tax
-    iny #2
--:
-    lda [$07],Y : sta $7EB000,X
-    iny #2
-    clc
-    txa : adc #$0040 : tax
-    dec $11
-    bne -
-
-    dec $0F
-    bne .B3DE
-
-    !A8
-    lda $13
-    beq +
-
-    lda #$02 : sta $031E
-    bra .B42A
-
-+:
-    lda.w camera_x+2
-    pha
-    and #$03
-    clc
-    adc #$06
-    sta $031E
-    pla
-    inc
-    and #$03
-    clc
-    adc #$06
-    sta $031F
-.B42A:
-    lda $0A : jsl _01A717_A728
-    !A16
-    dec $0D
-    bne .B3D6
-
-.B436:
-    !AX8
-    stz.w stage1_earthquake_active
-    inc $0B
-    lda $0B
-    cmp #$11
-    bne +
-
-    jml _01A717
-+:
-    sec
-    sbc #$0A
-    cmp #$03
-    bcs .B46A
-
-    tax
-    bne +
-
-    ldx #$16 : jsl _018DC0_8E0E
-+:
-    ldy #$18
-    lda.b #_01FF00_30
-    jsl _01A6FE
--:
-    lda #$01 : jsl _01A717_A728
-    lda $0066
-    bne -
-
-.B46A:
-    jmp .B325
+    incsrc "task_fns/_01B315.asm"
 }
 
 { ;B46D - B4C4
@@ -6614,12 +4553,12 @@ _01B526: ;a8 x8
 
 { ;B5AB - B648
 _01B5AB: ;a8 x8
-    jsr .B5AF
+    jsr .local
     rtl
 
-.B5AF:
+.local:
     phd
-    lda #$15 : xba : lda #$00 : tcd
+    lda.b #palette_cycle_start>>8 : xba : lda.b #palette_cycle_start : tcd
 .B5B6:
     lda $00
     beq .B5C1
@@ -6630,11 +4569,8 @@ _01B5AB: ;a8 x8
     jsr (.B5D2,X)
 .B5C1:
     !A16
-    tdc
-    clc
-    adc #$000E
-    tcd
-    cmp #$1562
+    tdc : clc : adc.w #palette_cycle.len : tcd
+    cmp.w #palette_cycle_start+palette_cycle[7].base
     !AX8
     bne .B5B6
 
@@ -6647,13 +4583,11 @@ _01B5AB: ;a8 x8
 ;-----
 
 .B5DA:
-    lda $01
-    asl
-    tax
+    lda $01 : asl : tax
     !AX16
-    lda.l palette_cycling+0,X : sta $06 : tax
-    lda.l palette_cycling+0,X : sta $02
-    lda.l palette_cycling+2,X : sta $0A
+    lda.l palette_cycling_data+0,X : sta $06 : tax
+    lda.l palette_cycling_data+0,X : sta $02
+    lda.l palette_cycling_data+2,X : sta $0A
     inc $0C
     rts
 
@@ -6670,12 +4604,12 @@ _01B5AB: ;a8 x8
     lda $03 : sta $0000
     stz $0001
     ldx $08
-    lda.l palette_cycling+4,X : sta $05
+    lda.l palette_cycling_data+4,X : sta.b palette_cycle.timer
     inx
     !A16
     ldy $0A
 .B61D:
-    lda.l palette_cycling+4,X
+    lda.l palette_cycling_data+4,X
     phx
     tyx
     sta $7EF400,X
@@ -6694,7 +4628,7 @@ _01B5AB: ;a8 x8
 ;-----
 
 .B63B:
-    dec $05
+    dec.b palette_cycle.timer
     bne .B648
 
     lda #$02
@@ -6775,10 +4709,7 @@ _01B6AE:
     phd
     ldx.w magic_current
     stx $033F
-    lda #$03
-    xba
-    lda #$19
-    tcd
+    lda #$03 : xba : lda #$19 : tcd
     txa
     jsl _018E32_8E81
     !A8
@@ -6790,11 +4721,9 @@ _01B6AE:
 { ;B6CB - B86D
 _01B6CB: ;a8 x8
     phd
-    lda #$1A : xba : lda #$80
-    tcd
+    lda #$1A : xba : lda #$80 : tcd
     jsr .B6E0
-    lda #$1A : xba : lda #$8A
-    tcd
+    lda #$1A : xba : lda #$8A : tcd
     jsr .B6E0
     pld
     rts
@@ -7337,7 +5266,7 @@ _01B9A8: ;a8 x?
     !A16
     sec
     txa
-    sbc.w #!obj_size
+    sbc.w #obj.ext.len
     tax
     bne .BAE3
 
@@ -7413,7 +5342,7 @@ _01B9A8: ;a8 x?
     !A16
     sec
     txa
-    sbc.w #!obj_size
+    sbc.w #obj.ext.len
     tax
     bne .BBC6
 
@@ -7696,8 +5625,7 @@ _01BEBC: ;a8 x8
     phd
     jsr _01BF78
     !A16
-    lda #$15A2
-    tcd
+    lda #$15A2 : tcd
     ldx #$03 : stx $1A77
     lda.w stage
     asl #2
@@ -7720,10 +5648,7 @@ _01BEBC: ;a8 x8
 
 .BEF8:
     !A16
-    clc
-    tdc
-    adc #$0156
-    tcd
+    clc : tdc : adc #$0156 : tcd
     !A8
     ply
     iny
@@ -7794,38 +5719,32 @@ _01BF78: ;a- x8
     ldx.w stage
     phx
     ldy.w _00B805,X
-    lda #$15A2
-    tcd
+    lda #$15A2 : tcd
     ldx.w _00B805+0,Y
     phy
     jsr .BFCE
     ply
-    lda #$16F8
-    tcd
+    lda #$16F8 : tcd
     ldx.w _00B805+1,Y
     phy
     jsr .BFCE
     ply
-    lda #$184E
-    tcd
+    lda #$184E : tcd
     ldx.w _00B805+2,Y
     jsr .BFCE
     plx
     ldy.w _00B88B,X
-    lda #$15A2
-    tcd
+    lda #$15A2 : tcd
     ldx.w _00B88B+0,Y
     phy
     jsr _01C00B
     ply
-    lda #$16F8
-    tcd
+    lda #$16F8 : tcd
     ldx.w _00B88B+1,Y
     phy
     jsr _01C00B
     ply
-    lda #$184E
-    tcd
+    lda #$184E : tcd
     ldx.w _00B88B+2,Y
     jsr _01C00B
     !AX8
@@ -7911,8 +5830,7 @@ _01C062: ;a- x8
     php
     phd
     !A16
-    lda #$15A2
-    tcd
+    lda #$15A2 : tcd
 .C06A:
     lda $4F
     beq .C074
@@ -7954,8 +5872,7 @@ _01C062: ;a- x8
     cpx $1A75
     beq .C0DD
 
-    lda $1A2F,X : xba : lda $1A30,X : xba
-    tcd
+    lda $1A2F,X : xba : lda $1A30,X : xba : tcd
     ldy $1A31,X : sty $39
     clc
     txa
@@ -8591,10 +6508,7 @@ _01C4AB: ;a8 x8
     and #$0006
     tax
     phd
-    clc
-    tdc
-    adc #$00D3
-    tcd
+    clc : tdc : adc #$00D3 : tcd
     lda.w stage
     bne .C58F
 
@@ -8757,7 +6671,7 @@ _01C679:
     lda $032A
     bne _01C679
 
-    lda $1F95
+    lda.w in_armor_up_anim
     bne .C67C
 
     ldx $19EC
@@ -8920,13 +6834,13 @@ _01C679:
 .C7AC:
     ;debugging? free camera movement
     lda.w p1_button_hold+1 : and #!right|!left|!down|!up : tax
-    ldy.w _01B7A5_B7A5,X
+    ldy.w _00B7A5_B7A5,X
     bmi .C7F5
 
-    clc : lda.w _01B7A5_B7B5+0,Y : adc.w camera_x+1 : sta.w camera_x+1 : sta $1733 : sta $1889
-          lda.w _01B7A5_B7B5+1,Y : adc.w camera_x+2 : sta.w camera_x+2 : sta $1734 : sta $188A
-    clc : lda.w _01B7A5_B7B5+2,Y : adc.w camera_y+1 : sta.w camera_y+1 : sta $1737 : sta $188D
-          lda.w _01B7A5_B7B5+3,Y : adc.w camera_y+2 : sta.w camera_y+2 : sta $1738 : sta $188E
+    clc : lda.w _00B7A5_B7B5+0,Y : adc.w camera_x+1 : sta.w camera_x+1 : sta $1733 : sta $1889
+          lda.w _00B7A5_B7B5+1,Y : adc.w camera_x+2 : sta.w camera_x+2 : sta $1734 : sta $188A
+    clc : lda.w _00B7A5_B7B5+2,Y : adc.w camera_y+1 : sta.w camera_y+1 : sta $1737 : sta $188D
+          lda.w _00B7A5_B7B5+3,Y : adc.w camera_y+2 : sta.w camera_y+2 : sta $1738 : sta $188E
 .C7F5:
     rts
 
@@ -9005,8 +6919,7 @@ _01C87B:
     asl
     tax
     !AX16
-    lda #$15A2
-    tcd
+    lda #$15A2 : tcd
     jsr (.C893,X)
     pld
     plp
@@ -9232,7 +7145,7 @@ _01C8A7: ;a x
     stz $14F0
     stz.w !obj_upgrade2.active
     lda #$FF : sta $14B7
-    lda.w !obj_arthur._0F_10
+    lda.w !obj_arthur._0F
     bmi .CA73
 
     inc $14E3
@@ -9377,7 +7290,7 @@ _01C8A7: ;a x
     bra .CBDA
 
 .CBCD:
-    lda $02C3
+    lda.w frame_counter
     and #$01
     bne .CC04
 
@@ -9538,7 +7451,7 @@ _01CCBD: ;a8 x8
     stx $14
     lda #$FF : sta $26 : sta $14B8
     !A16
-    lda.w _00ED00+$04 : sta $0313+$27 ;todo: what is 313?
+    lda.w _00ED00+$04 : sta $0313+$27 ;todo: what is 313? edit: mistaken assumption most likely, should be 33A & 33C?
     lda.w _00ED00+$34 : sta $0340
     lda #$0020 : sta $0313+$29
     lda #$0050 : sta $0342
@@ -9938,10 +7851,8 @@ _01CCBD: ;a8 x8
 
 { ;CFE6 - CFF2
 _01CFE6: ;a8 x-
-    lda #$20
-    sta $1EF0
-    asl
-    sta $1EF2
+    lda #$20 : sta $1EF0
+    asl      : sta $1EF2
     inc $14F9
     rts
 }
@@ -11361,16 +9272,13 @@ set_arthur_palette: ;a- x8
 
 { ;D9FA - DA87
 _01D9FA: ;arthur armor up code
-    ldx #$90
+    ldx.b #task[6].base
     ldy #$06
 .D9FE:
-    lda $004E,X : sta $1FCB,Y
-    lda #$02 : sta $004E,X
+    lda.w !task_offset.state,X : sta $1FCB,Y
+    lda #$02 : sta.w !task_offset.state,X
     dey
-    sec
-    txa
-    sbc #$18
-    tax
+    sec : txa : sbc.b #task.len : tax
     bne .D9FE
 
     ldy #$00
@@ -11399,7 +9307,7 @@ _01D9FA: ;arthur armor up code
     dec $2F
     bne .DA4E
 
-    inc $1F95
+    inc.w in_armor_up_anim
     stz $0332
     inc $0331
     lda #$24 : sta $39
@@ -11413,17 +9321,14 @@ _01D9FA: ;arthur armor up code
     bne .DA61
 
     jsr _01DDEF_local
-    stz $1F95
+    stz.w in_armor_up_anim
     stz $0F
-    ldx #$90
+    ldx.b #task[6].base
     ldy #$06
 .DA77:
-    lda $1FCB,Y : sta $004E,X
+    lda $1FCB,Y : sta.w !task_offset.state,X
     dey
-    sec
-    txa
-    sbc #$18
-    tax
+    sec : txa : sbc.b #task.len : tax
     bne .DA77
 
     jmp _01CCBD_CDC4
@@ -11459,7 +9364,7 @@ _01DAA4:
     stx.w !obj_arthur.state+1
     sty.w !obj_arthur.state+2
     jsr _01DDE6
-    lda #$FF : sta.w !obj_arthur._0F_10
+    lda #$FF : sta.w !obj_arthur._0F
 .DAB7:
     rtl
 }
@@ -11839,7 +9744,7 @@ _01DD90: ;a8 x16
     ;unused
     lda.b #_01DA99    : sta.w !obj_arthur.state+1
     lda.b #_01DA99>>8 : sta.w !obj_arthur.state+2
-    stz.w !obj_arthur._0F_10
+    stz.w !obj_arthur._0F
     rtl
 }
 
@@ -11847,7 +9752,7 @@ _01DD90: ;a8 x16
 _01DDAE: ;a9 x-
     lda.b #_01DB67    : sta.w !obj_arthur.state+1
     lda.b #_01DB67>>8 : sta.w !obj_arthur.state+2
-    stz.w !obj_arthur._0F_10
+    stz.w !obj_arthur._0F
     !AX16
     ldx #$01C7
 .DDC0:
@@ -12231,8 +10136,8 @@ arthur_maiden:
     inc.w jump_counter
     lda #$2B : jsl _018049_8053
     jsr _01D263_D2D4
-    lda.w _01BB0E_BB0E,X : sta $3C
-    ldy.w _01BB0E_BB12,X : jsl set_speed_xyg
+    lda.w _00BB0E_BB0E,X : sta $3C
+    ldy.w _00BB0E_BB12,X : jsl set_speed_xyg
     lda.b obj.facing : sta.b obj.direction
 .E072:
     brk #$00
@@ -12324,7 +10229,7 @@ arthur_seal: ;a? x8
     inc.w jump_counter
     lda #$2B : jsl _018049_8053
     jsr _01D263_D2D4
-    ldy.w _01BB16,X : jsl set_speed_xyg
+    ldy.w _00BB16,X : jsl set_speed_xyg
     lda.b obj.facing : sta.b obj.direction
     lda #$2B : jsl _018049_8053
 .E11C:
@@ -12349,7 +10254,7 @@ arthur_seal: ;a? x8
     bne .E136
 
     jsr _01D263_D2D4
-    ldy.w _01BB16,X : jsl set_speed_xyg
+    ldy.w _00BB16,X : jsl set_speed_xyg
     lda.b obj.facing : sta.b obj.direction
     lda #$02 : sta $3C
 .E14E:
@@ -12849,7 +10754,7 @@ _01EC63:
     lda #$A6 : sta $1D
     lda #$08 : sta $0004
     lda.b obj.facing : sta $0005
-    lda $02C3 : sta $0006
+    lda.w frame_counter : sta $0006
 .ECE1:
     jsr get_magic_slot
     bmi .ED35
@@ -13653,7 +11558,7 @@ _01F264:
     bvc .F2EA
 
     jsl update_animation_normal
-    lda $02C3
+    lda.w frame_counter
     and #$0F
     bne .F2E9
 
@@ -13680,10 +11585,7 @@ get_magic_slot: ;a8 x8
     beq .F4F3
 
     !A16
-    clc
-    txa
-    adc.w #!obj_size
-    tax
+    clc : txa : adc.w #obj.ext.len : tax
     !A8
     dey
     bpl .F4DE
@@ -13725,7 +11627,7 @@ _01F4F7:
 ;----- F52E
 
     lda.b obj.direction : inc : and #$3F : sta.b obj.direction
-    lda $02C3
+    lda.w frame_counter
     and #$03
     bne .F549
 
@@ -13767,7 +11669,7 @@ _01F4F7:
     clc
     lda $2E
     ldx #$06 : jsl _0189D9
-    lda $02C3
+    lda.w frame_counter
     and #$0F
     bne .F59E
 
@@ -13835,7 +11737,7 @@ _01F5A9:
     !A16
     clc
     txa
-    adc.w #!obj_size
+    adc.w #obj.ext.len
     cmp.w #obj_start+obj[50] ;end of obj_object
     tax
     !A8
@@ -14057,10 +11959,7 @@ _01F722: ;a8 x8
     lda #$02 : sta $04
 .F757:
     !A16
-    tdc
-    clc
-    adc #$0010
-    tcd
+    tdc : clc : adc #$0010 : tcd
     cmp #$15A2
     !A8
     bne .F729

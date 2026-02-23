@@ -4,18 +4,22 @@
 
 org $868000
 
-    arch spc700 ;APU code/data
+arch spc700
 
-    ;format: byte amount to copy | apuram destination address | data to send
+spc_code_start:
 
-{ ;0300 - 03CA
+{
 if !version == 0 || !version == 1
-    dw $0933, $0300
+    dw $0933, $0300 ;bytes to copy | apuram destination address
 elseif !version == 2
     dw $092B, $0300
 endif
+}
 
-base $0300 : spc_0300:
+base $0300
+
+{ ;0300 - 03CA
+spc_0300:
     clrp
     mov  x, #$CF
     mov  sp, x

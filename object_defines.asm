@@ -200,19 +200,6 @@
 }
 
 {
-    !obj_size = $41
-
-    !obj_start    = obj_start+obj[0]
-    !obj_arthur   = obj_start+obj[0]
-    !obj_weapons  = obj_start+obj[1]
-    !obj_magic    = obj_start+obj[11]
-    !obj_objects  = obj_start+obj[19] ;name?
-    !obj_upgrade  = obj_start+obj[50]
-    !obj_shield   = obj_start+obj[51]
-    !obj_upgrade2 = obj_start+obj[52]
-}
-
-{
 struct obj 0 ;65 bytes / obj
     .base:       skip 0
     .active:     skip 1
@@ -222,9 +209,10 @@ struct obj 0 ;65 bytes / obj
     .init_param: skip 1
     .flags1:     skip 1 ;todo: names? flags_gfx and flags_...? or combine them
     .flags2:     skip 1
-    ._0A_0D:     skip 4
+    ._0A_0D:     skip 4 ;0A-0B appears to be sprite related
     .hp:         skip 1
-    ._0F_10:     skip 2
+    ._0F:        skip 1 ;seems to often be used as a state index, but also other things. obj dependent?
+    ._10:        skip 1 ;index into array for determining if enemy is too far away from camera?
     .direction:  skip 1
     .facing:     skip 1
     ._13:        skip 2 ;physics pointer?
@@ -241,14 +229,46 @@ struct obj 0 ;65 bytes / obj
     ._27:        skip 2 ;gfx related
     ._29:        skip 2 ;gfx related
     ._2B:        skip 2 ;?
-    ;2D-40:      see struct base_ext
+    ;2D-40:      see obj.ext struct
+endstruct
+
+struct ext extends obj
+    ._2D_3D: skip 17 ;type dependent data
+    ._3E_3F: skip 2  ;sometimes used for sprite offset data?
+    .index:  skip 1  ;1-indexed slot id (set but not used)
+
+    .len:    skip 0
 endstruct
 }
 
 {
-struct base_ext extends obj
-    ._2D_3D: skip 17 ;type dependent data
-    ._3E_3F: skip 2  ;sometimes used for sprite offset data?
-    .index:  skip 1  ;1-indexed slot id (set but not used)
-endstruct
+    ;important obj array offsets
+    !obj_start    = obj_start+obj
+    !obj_arthur   = obj_start+obj[0]
+    !obj_weapons  = obj_start+obj[1]
+    !obj_magic    = obj_start+obj[11]
+    !obj_objects  = obj_start+obj[19] ;name?
+    !obj_upgrade  = obj_start+obj[50]
+    !obj_shield   = obj_start+obj[51]
+    !obj_upgrade2 = obj_start+obj[52]
+}
+
+{
+    ;flags1
+    ;bit 0-2: priority
+    ;bit 3: show sprite?
+    ;bit 4: flicker
+    ;bit 5: shimmer
+    ;bit 6: unused?
+    ;bit 7: unused?
+
+    ;flags2
+    ;bit 0: ?
+    ;bit 1: ?
+    ;bit 2: ?
+    ;bit 3: ?
+    ;bit 4: ?
+    ;bit 5: ?
+    ;bit 6: "in range / playfield"? visible?
+    ;bit 7: ?
 }

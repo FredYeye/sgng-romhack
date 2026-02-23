@@ -173,7 +173,7 @@ _0280CB:
 { ;80E9 - 810C
 _0280E9: ;a8 x8
     ldx.b obj.type
-    dec.w obj_type_count,X ;decrease type count
+    dec.w obj_type_count,X
 .80EE: ;a8 x-
     stz.b obj.active
     stz $2C
@@ -389,8 +389,7 @@ _02821B: ;a8 x8
     phd
     lda #$35 : sta $02C5 ;obj count
     stz $02C6
-    lda #$04 : xba : lda #$3C
-    tcd
+    lda.b #obj_start>>8 : xba : lda.b #obj_start : tcd ;todo: use label
 
 .822A:
     lda $1F96
@@ -414,8 +413,7 @@ _02821B: ;a8 x8
     jmp .828E
 
 .824B:
-    lda $1F95
-    beq .826E
+    lda.w in_armor_up_anim : beq .826E
 
     !A16
     tdc
@@ -464,12 +462,8 @@ _02821B: ;a8 x8
     jsr (.thing_object_offsets,X)
 .828E:
     !A16
-    clc
-    tdc
-    adc.w #!obj_size
-    tcd
-    clc
-    lda.w !obj_arthur.pos_y+1 : adc $14D8 : sta $14DA
+    clc : tdc : adc.w #obj.ext.len : tcd
+    clc : lda.w !obj_arthur.pos_y+1 : adc $14D8 : sta $14DA
     !A8
     inc $02C6
     dec $02C5
@@ -1917,9 +1911,9 @@ _029139:
 }
 
 { ;96E9 - 96FD
-_0296E9:
+_0296E9: ;only used by eagler
     jsr _02FA37_FA6D
-    lda $02C3
+    lda.w frame_counter
     clc
     adc $02C6
     and #$03
@@ -1934,7 +1928,7 @@ _0296E9:
 { ;96FE - 9712
 _0296FE: ;a8 x-
     jsr _02F9FA_F9FE
-    lda $02C3
+    lda.w frame_counter
     clc
     adc $02C6
     and #$03
@@ -3429,7 +3423,7 @@ _02FAD4: ;a- x-
 
 { ;FB2B - FB61
 _02FB2B: ;a8 x?
-    lda $02C3
+    lda.w frame_counter
     clc
     adc $02C6
     and #$03
@@ -3780,7 +3774,7 @@ _02FD62:
 ;-----
 
 .FD6A: ;a8 x?
-    lda $02C3
+    lda.w frame_counter
     clc
     adc $02C6
     and #$03
@@ -3793,7 +3787,7 @@ _02FD62:
     bra .FD8C
 
 .FD7C: ;a8 x-
-    lda $02C3
+    lda.w frame_counter
     clc
     adc $02C6
     and #$03
@@ -4065,7 +4059,7 @@ _02FEBC: ;a8 x-
 { ;FF22 - FF56
 _02FF22: ;a8 x-
     ;collision testing with the shield
-    lda $02C3
+    lda.w frame_counter
     clc
     adc $02C6
     and #$03
