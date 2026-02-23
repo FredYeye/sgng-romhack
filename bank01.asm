@@ -3732,6 +3732,7 @@ _01A6AB: ;a8 x8
     bne .A6DA
 
     inc.w frame_counter
+    jsl call_rng
     jsr _01A74A_A7A4
 .A6DA:
     lda #$08 : sta.w !task_offset.state,Y

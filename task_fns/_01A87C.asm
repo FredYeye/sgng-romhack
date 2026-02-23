@@ -278,6 +278,13 @@ endif
 
 .AB44: ;on pressing game start
     jsl _03F526_F527 ;play cutscene
+
+    stz.w pot.enemy_counter
+    stz.w pot.counter
+    lda #$03 : sta.w pot.weapon_req
+    lda #$0A : sta.w pot.armor_statue_req
+    lda #$20 : sta.w pot.extend_req
+
     lda #$05 : sta.w continues
     inc $0278
     stz $0279
@@ -358,8 +365,6 @@ elseif !version == 2
     jsr .AC7D_eu
 endif
     lda.w options.extra_lives : lsr : sta.w extra_lives
-    lda #$C3 : sta.w rng_state
-    lda #$01 : sta.w rng_state+1
     lda #$02 : sta $029E
     stz.w frame_counter
     inc $0278
@@ -533,7 +538,6 @@ endif
     dec $1F90
 .AD8C:
     lda #$0C : sta.w !obj_arthur.active
-    jsl _019024
     lda $0292 : and #$01 : eor #$01 : sta $032E
     jsl _019136
     jsr _01BE1C
@@ -548,11 +552,6 @@ endif
     jsr _01AF04_AF08
     jsr .AE55
     jsr _01F66A
-    stz.w pot.enemy_counter
-    stz.w pot.counter
-    lda #$03 : sta.w pot.weapon_req
-    lda #$0A : sta.w pot.armor_statue_req
-    lda #$20 : sta.w pot.extend_req
     lda #$00 : jsl _0183D4_83DB
     lda #$43 : sta $02EC
     lda #$05 : sta.w timer_minutes

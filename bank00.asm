@@ -257,7 +257,7 @@ _0083C2:
     phb
     lda.b #bank09>>16 : pha : plb
     phd
-    !A16 : lda.w #!obj_objects.base : tcd : !A8
+    pea.w !obj_objects.base : pld
     lda #$1F : sta $0036
     stz $0037
 .83DE:
