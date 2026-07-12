@@ -1,4 +1,4 @@
-org $808000
+org $808000 : bank00:
 
 { ;8100 - 8107
 clear_snes_regs: ;a8 x8
@@ -68,7 +68,6 @@ entry: ;emulated mode (code entry)
     sec : tya : sbc.b #task.len : tay
     dex #2 : bpl .817F
 
-    lda.b #$01 : sta.w rng_state+1
     lda.b #irq    : sta $0030
     lda.b #irq>>8 : sta $0031
     stz $0000 ;lowest byte of spc_code_start address
@@ -112,7 +111,7 @@ nmi: ;a- x-
     lda #$0000
     tcd
     !AX8
-    pha
+    lda.b #bank00>>16 : pha
     plb
     inc.w video_frame_counter
     stz !HDMAEN

@@ -592,10 +592,10 @@ _0183D4: ;a8 x16
 
 { ;8422 - 8450
 call_rng: ;a8 x-
-    ;period CDCF1E
+    ;period E9EA9E
     rep #$21 ;!A16 + carry clear
-    lda.w rng_state   : xba :                   sta.w rng_state
-    lda.w rng_state+1 : xba : adc.w rng_state : sta.w rng_state+1
+    lda.w rng_state+1 : eor.w rng_state+0 : sta.w rng_state+0
+    sbc.w rng_state+1 : sta.w rng_state+1
     !A8
     rtl
 }
